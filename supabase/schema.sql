@@ -34,7 +34,9 @@ CREATE TABLE IF NOT EXISTS public.contracts (
   saved_amount DECIMAL(12,2),
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  decision_status VARCHAR(20) CHECK (decision_status IN ('kept', 'terminated')),
+  decision_date TIMESTAMPTZ
 );
 
 -- Notification logs table
