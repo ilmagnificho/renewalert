@@ -37,7 +37,8 @@ export default function DashboardPage() {
                         totalMonthlyUSD: 20,
                         totalYearlyKRW: 49152000,
                         totalYearlyUSD: 240,
-                        totalContracts: 5
+                        totalContracts: 5,
+                        exchangeRate: 1400
                     });
                     setUpcoming([
                         {
@@ -188,7 +189,8 @@ export default function DashboardPage() {
                 <Card className="col-span-1 lg:col-span-1 bg-gradient-to-br from-zinc-900 to-black border-zinc-800">
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <span className="text-sm font-medium text-blue-500">월 예상 구독료 (합산)</span>
+                            <span className="text-sm font-medium text-blue-500">월 예상 반복 지출</span>
+                            <span className="text-[10px] text-muted-foreground">(USD 환산 포함)</span>
                         </div>
                         <p className="text-2xl font-bold text-foreground font-mono tracking-tight">
                             {formatCurrency(summary?.totalMonthly || 0)}
@@ -203,7 +205,14 @@ export default function DashboardPage() {
                                 <span className="font-medium text-foreground">{formatCurrency(summary?.totalMonthlyUSD || 0, 'USD')}</span>
                             </div>
                         </div>
-                        <p className="text-[10px] text-muted-foreground/50 mt-2 text-right">* USD는 약 1,400원 기준</p>
+                        <div className="mt-4 pt-4 border-t border-zinc-800/50">
+                            <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
+                                환율은 하나은행 매매기준율 기준으로 매일 자동 업데이트됩니다.
+                            </p>
+                            <p className="text-[10px] text-blue-500/80 mt-1 font-medium">
+                                적용 환율: 1 USD = {formatCurrency(summary?.exchangeRate || 1400, 'KRW')}
+                            </p>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -237,7 +246,11 @@ export default function DashboardPage() {
                 ) : (
                     <div className="space-y-3">
                         {upcoming.map((contract) => (
-                            <ContractCard key={contract.id} contract={contract} />
+                            <ContractCard
+                                key={contract.id}
+                                contract={contract}
+                                exchangeRate={summary?.exchangeRate}
+                            />
                         ))}
                     </div>
                 )}

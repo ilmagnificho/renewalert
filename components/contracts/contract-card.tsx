@@ -8,9 +8,10 @@ import Link from 'next/link';
 
 interface ContractCardProps {
     contract: Contract;
+    exchangeRate?: number;
 }
 
-export function ContractCard({ contract }: ContractCardProps) {
+export function ContractCard({ contract, exchangeRate }: ContractCardProps) {
     const daysUntil = getDaysUntil(contract.expires_at);
     const urgency = contract.status === 'active' ? getUrgencyLevel(daysUntil) : 'default' as const;
 
@@ -90,9 +91,16 @@ export function ContractCard({ contract }: ContractCardProps) {
                     </div>
                 </div>
                 <div className="flex items-center gap-5 shrink-0 ml-4">
-                    <span className="text-base font-mono font-bold text-foreground group-hover:text-primary transition-colors">
-                        {formatCurrency(contract.amount, contract.currency)}
-                    </span>
+                    <div className="text-right">
+                        <div className="text-base font-mono font-bold text-foreground group-hover:text-primary transition-colors">
+                            {formatCurrency(contract.amount, contract.currency)}
+                        </div>
+                        {contract.currency === 'USD' && exchangeRate && (
+                            <div className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                                ≈ {formatCurrency(contract.amount * exchangeRate, 'KRW')}
+                            </div>
+                        )}
+                    </div>
                     {statusBadge()}
                 </div>
             </div>

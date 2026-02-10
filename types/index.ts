@@ -68,6 +68,7 @@ export interface DashboardSummary {
   totalYearlyKRW: number;
   totalYearlyUSD: number;
   totalContracts: number;
+  exchangeRate: number;
 }
 
 // Helper constants

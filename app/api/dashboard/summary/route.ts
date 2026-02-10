@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
+import { getUSDToKRWRate } from '@/lib/exchange-rate';
 
 export async function GET() {
     const supabase = await createClient();
@@ -8,6 +9,8 @@ export async function GET() {
     if (!user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const exchangeRate = await getUSDToKRWRate();
 
     const { data: contracts, error } = await supabase
         .from('contracts')
@@ -31,8 +34,6 @@ export async function GET() {
     let totalYearlyKRW = 0;
     let totalYearlyUSD = 0;
 
-    const EXCHANGE_RATE = 1400; // 1 USD = 1400 KRW (Approx)
-
     (contracts || []).forEach((contract) => {
         const expiresAt = new Date(contract.expires_at);
         expiresAt.setHours(0, 0, 0, 0);
@@ -55,9 +56,6 @@ export async function GET() {
             yearlyAmount = amount;
             monthlyAmount = Math.round(amount / 12);
         } else {
-            // One-time payment (not recurring) - exclude from subscription totals?
-            // Or treat as yearly/monthly? Usually exclude or treat as 0 for subscription.
-            // For now, let's exclude onetime from "Monthly Subscription" check.
             monthlyAmount = 0;
             yearlyAmount = 0;
         }
@@ -72,8 +70,8 @@ export async function GET() {
     });
 
     // Grand Totals (Converted to KRW)
-    const totalMonthly = totalMonthlyKRW + (totalMonthlyUSD * EXCHANGE_RATE);
-    const totalYearly = totalYearlyKRW + (totalYearlyUSD * EXCHANGE_RATE);
+    const totalMonthly = totalMonthlyKRW + (totalMonthlyUSD * exchangeRate);
+    const totalYearly = totalYearlyKRW + (totalYearlyUSD * exchangeRate);
 
     return NextResponse.json({
         urgent,
@@ -85,6 +83,7 @@ export async function GET() {
         totalMonthlyUSD,
         totalYearlyKRW,
         totalYearlyUSD,
+        exchangeRate,
         totalContracts: contracts?.length || 0,
     });
 }
