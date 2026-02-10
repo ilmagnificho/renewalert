@@ -7,7 +7,6 @@ import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Button } from '@/components/ui/button';
 
 export function Sidebar() {
     const pathname = usePathname();
@@ -65,26 +64,27 @@ export function Sidebar() {
                         ))}
                     </nav>
 
-                    <Link href="/contracts/new">
-                        <Button className="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border mb-4">
-                            + 새 계약 등록
-                        </Button>
-                    </Link>
-                    <button
-                        onClick={handleSignOut}
-                        className="flex w-full items-center gap-3 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
-                    >
-                        <svg className="w-5 h-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        로그아웃
-                    </button>
+                    <div className="space-y-4">
+                        <Link href="/contracts/new">
+                            <Button className="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border">
+                                + 새 계약 등록
+                            </Button>
+                        </Link>
+                        <button
+                            onClick={handleSignOut}
+                            className="flex w-full items-center gap-3 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
+                        >
+                            <svg className="w-5 h-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            로그아웃
+                        </button>
+                    </div>
                 </div>
-            </div>
-        </aside >
+            </aside>
 
-            {/* Mobile Header & Nav */ }
-            < div className = "md:hidden fixed top-0 w-full z-40 bg-background/80 backdrop-blur-md border-b border-border h-16 px-4 flex items-center justify-between" >
+            {/* Mobile Header & Nav */}
+            <div className="md:hidden fixed top-0 w-full z-40 bg-background/80 backdrop-blur-md border-b border-border h-16 px-4 flex items-center justify-between">
                 <Link href="/dashboard" className="flex items-center gap-2 px-2 hover:opacity-80 transition-opacity">
                     <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
                         <span className="text-primary-foreground font-bold text-lg">R</span>
@@ -92,56 +92,53 @@ export function Sidebar() {
                     <span className="font-bold text-xl text-foreground">RenewAlert</span>
                 </Link>
                 <div className="flex items-center gap-2">
-                    <ModeToggle />
                     <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-muted-foreground">
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
                         </svg>
                     </button>
                 </div>
-            </div >
+            </div>
 
-        {/* Mobile Menu Dropdown */ }
-    {
-        isMobileMenuOpen && (
-            <div className="md:hidden fixed inset-0 top-16 z-30 bg-background px-4 py-6 animate-in slide-in-from-top-5">
-                <nav className="space-y-4">
-                    {navItems.map((item) => (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                            className={cn(
-                                "flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-colors",
-                                pathname.startsWith(item.href)
-                                    ? "bg-primary text-primary-foreground"
-                                    : "text-muted-foreground bg-accent/50"
-                            )}
+            {/* Mobile Menu Dropdown */}
+            {isMobileMenuOpen && (
+                <div className="md:hidden fixed inset-0 top-16 z-30 bg-background px-4 py-6 animate-in slide-in-from-top-5">
+                    <nav className="space-y-4">
+                        {navItems.map((item) => (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className={cn(
+                                    "flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-colors",
+                                    pathname.startsWith(item.href)
+                                        ? "bg-primary text-primary-foreground"
+                                        : "text-muted-foreground bg-accent/50"
+                                )}
+                            >
+                                <svg className="w-5 h-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                                </svg>
+                                {item.label}
+                            </Link>
+                        ))}
+                        <Link href="/contracts/new" onClick={() => setIsMobileMenuOpen(false)}>
+                            <Button className="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border mt-4 h-12">
+                                + 새 계약 등록
+                            </Button>
+                        </Link>
+                        <button
+                            onClick={handleSignOut}
+                            className="flex w-full items-center gap-3 px-4 py-3 mt-4 text-base font-medium text-destructive bg-destructive/10 rounded-xl"
                         >
                             <svg className="w-5 h-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
-                            {item.label}
-                        </Link>
-                    ))}
-                    <Link href="/contracts/new" onClick={() => setIsMobileMenuOpen(false)}>
-                        <Button className="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border mt-4 h-12">
-                            + 새 계약 등록
-                        </Button>
-                    </Link>
-                    <button
-                        onClick={handleSignOut}
-                        className="flex w-full items-center gap-3 px-4 py-3 mt-4 text-base font-medium text-destructive bg-destructive/10 rounded-xl"
-                    >
-                        <svg className="w-5 h-5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        로그아웃
-                    </button>
-                </nav>
-            </div>
-        )
-    }
+                            로그아웃
+                        </button>
+                    </nav>
+                </div>
+            )}
         </>
     );
 }
