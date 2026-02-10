@@ -40,10 +40,9 @@ export async function updateSession(request: NextRequest) {
     );
 
     if (isProtected && !user) {
-        // Mock Mode: Allow access even without user
-        // const url = request.nextUrl.clone();
-        // url.pathname = '/login';
-        // return NextResponse.redirect(url);
+        const url = request.nextUrl.clone();
+        url.pathname = '/login';
+        return NextResponse.redirect(url);
     }
 
     // Redirect logged-in users away from auth pages

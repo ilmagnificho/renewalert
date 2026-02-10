@@ -25,90 +25,22 @@ export default function DashboardPage() {
                 const { data: { user } } = await supabase.auth.getUser();
 
                 if (!user) {
-                    // Mock Data for Demo Mode
-                    setUserName('게스트');
-                    setSummary({
-                        urgent: 2, // D-7
-                        warning: 3, // D-30
-                        normal: 7,
-                        totalMonthly: 1250000,
-                        totalYearly: 15000000,
-                        totalContracts: 12
-                    });
-                    setUpcoming([
-                        {
-                            id: 'mock-1',
-                            name: 'Adobe Creative Cloud',
-                            type: 'saas',
-                            status: 'active',
-                            expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days later
-                            amount: 62000,
-                            currency: 'KRW',
-                            cycle: 'monthly',
-                            memo: '디자인 팀 라이선스',
-                            auto_renew: true,
-                            notice_days: 7,
-                            user_id: 'mock',
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        },
-                        {
-                            id: 'mock-2',
-                            name: 'AWS Infrastructure',
-                            type: 'saas',
-                            status: 'active',
-                            expires_at: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-                            amount: 450000,
-                            currency: 'USD',
-                            cycle: 'monthly',
-                            memo: '메인 서버 호스팅',
-                            auto_renew: true,
-                            notice_days: 30,
-                            user_id: 'mock',
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        },
-                        {
-                            id: 'mock-3',
-                            name: '강남 오피스 임대료',
-                            type: 'rent',
-                            status: 'active',
-                            expires_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-                            amount: 3500000,
-                            currency: 'KRW',
-                            cycle: 'monthly',
-                            memo: '본사 사무실',
-                            auto_renew: false,
-                            notice_days: 90,
-                            user_id: 'mock',
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        }
+                    const [summaryRes, upcomingRes] = await Promise.all([
+                        fetch('/api/dashboard/summary'),
+                        fetch('/api/dashboard/upcoming')
                     ]);
+
+                    if (summaryRes.ok) setSummary(await summaryRes.json());
+                    if (upcomingRes.ok) setUpcoming(await upcomingRes.json());
+                } catch (e) {
+                    console.error(e);
+                } finally {
                     setIsLoading(false);
-                    return;
                 }
+            };
 
-                if (user) {
-                    setUserName(user.user_metadata.name || user.email?.split('@')[0] || '사용자');
-                }
-
-                const [summaryRes, upcomingRes] = await Promise.all([
-                    fetch('/api/dashboard/summary'),
-                    fetch('/api/dashboard/upcoming')
-                ]);
-
-                if (summaryRes.ok) setSummary(await summaryRes.json());
-                if (upcomingRes.ok) setUpcoming(await upcomingRes.json());
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchDashboard();
-    }, []);
+            fetchDashboard();
+        }, []);
 
 
     if (isLoading) {

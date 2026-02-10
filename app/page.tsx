@@ -32,7 +32,7 @@ export default function LandingPage() {
               로그인
             </Link>
             <Link
-              href="/dashboard"
+              href="/login?auto_demo=true"
               className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-full hover:bg-primary/90 transition-all duration-200 shadow-lg shadow-primary/20 hover:shadow-primary/40"
             >
               무료로 체험하기
@@ -58,7 +58,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/dashboard"
+              href="/login?auto_demo=true"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold px-8 py-4 rounded-xl hover:bg-primary/90 transition-all duration-200 text-lg shadow-xl shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-1"
             >
               무료로 체험하기 (데모)
