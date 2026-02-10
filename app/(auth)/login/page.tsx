@@ -21,6 +21,11 @@ function LoginContent() {
     const [isLoading, setIsLoading] = useState(false);
     const [isDemoLoading, setIsDemoLoading] = useState(false);
 
+    // Helper to set guest mode
+    const enableGuestMode = () => {
+        document.cookie = "guest_mode=true; path=/; max-age=3600"; // 1 hour
+    };
+
     // Auto-trigger demo login if query param is present
     useEffect(() => {
         if (searchParams.get('auto_demo') === 'true') {
@@ -97,6 +102,7 @@ function LoginContent() {
                 console.warn('Demo signup failed:', signUpError.message);
                 // Fallback to Guest Mode
                 addToast('info', '데모 계정 한도 초과로 게스트 모드(읽기 전용)로 시작합니다.');
+                enableGuestMode();
                 router.push('/dashboard');
                 router.refresh();
                 return;
@@ -109,6 +115,7 @@ function LoginContent() {
             } else {
                 // Signup successful but no session -> Email confirmation enabled
                 addToast('info', '계정이 생성되었으나 이메일 인증이 필요할 수 있습니다. 게스트 모드로 시작합니다.');
+                enableGuestMode();
                 router.push('/dashboard');
                 router.refresh();
             }
@@ -116,6 +123,7 @@ function LoginContent() {
         } catch (err) {
             console.error('Unexpected Demo Error:', err);
             addToast('info', '데모 로그인 오류가 발생하여 게스트 모드로 시작합니다.');
+            enableGuestMode();
             router.push('/dashboard');
             router.refresh();
         }

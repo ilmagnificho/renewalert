@@ -39,7 +39,9 @@ export async function updateSession(request: NextRequest) {
         request.nextUrl.pathname.startsWith(path)
     );
 
-    if (isProtected && !user) {
+    const guestMode = request.cookies.get('guest_mode');
+
+    if (isProtected && !user && !guestMode) {
         const url = request.nextUrl.clone();
         url.pathname = '/login';
         return NextResponse.redirect(url);
