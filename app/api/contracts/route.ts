@@ -91,6 +91,7 @@ export async function POST(request: Request) {
             memo: body.memo || null,
             tier: body.tier || '',
             owner_name: body.owner_name || '',
+            status: 'active', // Default status
         })
         .select()
         .single();
