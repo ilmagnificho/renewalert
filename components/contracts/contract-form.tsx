@@ -88,6 +88,31 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
         <Card className="border-slate-800 bg-slate-900/50">
             <CardContent className="p-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {mode === 'create' && (
+                        <div className="space-y-3 mb-8 p-4 bg-slate-900/80 border border-slate-800 rounded-lg">
+                            <label className="text-sm font-medium text-slate-400">간편 입력 (자주 쓰는 서비스)</label>
+                            <div className="flex flex-wrap gap-2">
+                                {[
+                                    { name: 'Adobe Creative Cloud', type: 'saas', amount: 62000, cycle: 'monthly', notice_days: 14 },
+                                    { name: 'AWS', type: 'saas', amount: 0, cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Slack', type: 'saas', amount: 11000, cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Google Workspace', type: 'saas', amount: 15000, cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Microsoft 365', type: 'saas', amount: 12500, cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Notion', type: 'saas', amount: 12000, cycle: 'monthly', notice_days: 30 },
+                                ].map((preset) => (
+                                    <button
+                                        key={preset.name}
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, ...preset } as ContractFormData)}
+                                        className="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-full border border-slate-700 transition-colors"
+                                    >
+                                        + {preset.name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <Input
                         id="name"
                         label="서비스/계약명 *"
@@ -141,22 +166,27 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <Input
                             id="expires_at"
-                            label="만기일 *"
+                            label="만기일 (다음 결제일) *"
                             type="date"
                             value={formData.expires_at}
                             onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
                             required
                             className="bg-slate-950/50 border-slate-700"
                         />
-                        <Input
-                            id="notice_days"
-                            label="해지 통보 기한 (일)"
-                            type="number"
-                            placeholder="30"
-                            value={formData.notice_days}
-                            onChange={(e) => setFormData({ ...formData, notice_days: Number(e.target.value) })}
-                            className="bg-slate-950/50 border-slate-700"
-                        />
+                        <div className="space-y-2">
+                            <Input
+                                id="notice_days"
+                                label="해지 통보 (만기 D-? 일 전)"
+                                type="number"
+                                placeholder="30"
+                                value={formData.notice_days}
+                                onChange={(e) => setFormData({ ...formData, notice_days: Number(e.target.value) })}
+                                className="bg-slate-950/50 border-slate-700"
+                            />
+                            <p className="text-xs text-slate-500">
+                                * 자동갱신을 막으려면 만기 며칠 전까지 해지 통보를 해야 하나요?
+                            </p>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-3 p-4 bg-slate-950/30 rounded-lg border border-slate-800">

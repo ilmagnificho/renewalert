@@ -94,15 +94,11 @@ function LoginContent() {
             });
 
             if (signUpError) {
-                if (signUpError.message.includes('already registered')) {
-                    // User exists but login failed -> Password mismatch?
-                    addToast('error', '데모 계정 설정 오류 (비밀번호 불일치). 관리자에게 문의하세요.');
-                } else if (signUpError.message.includes('rate limit')) {
-                    addToast('error', '너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.');
-                } else {
-                    addToast('error', `데모 계정 오류: ${signUpError.message}`);
-                }
-                setIsDemoLoading(false);
+                console.warn('Demo signup failed:', signUpError.message);
+                // Fallback to Guest Mode
+                addToast('info', '데모 계정 한도 초과로 게스트 모드(읽기 전용)로 시작합니다.');
+                router.push('/dashboard');
+                router.refresh();
                 return;
             }
 
@@ -112,15 +108,18 @@ function LoginContent() {
                 router.refresh();
             } else {
                 // Signup successful but no session -> Email confirmation enabled
-                addToast('info', '계정이 생성되었으나 이메일 인증이 필요할 수 있습니다. (Supabase 설정 확인 필요)');
-                setIsDemoLoading(false);
+                addToast('info', '계정이 생성되었으나 이메일 인증이 필요할 수 있습니다. 게스트 모드로 시작합니다.');
+                router.push('/dashboard');
+                router.refresh();
             }
 
         } catch (err) {
             console.error('Unexpected Demo Error:', err);
-            addToast('error', '알 수 없는 오류가 발생했습니다.');
-            setIsDemoLoading(false);
+            addToast('info', '데모 로그인 오류가 발생하여 게스트 모드로 시작합니다.');
+            router.push('/dashboard');
+            router.refresh();
         }
+        setIsDemoLoading(false);
     };
 
     return (
