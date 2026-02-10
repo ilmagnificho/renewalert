@@ -101,7 +101,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto p-12 bg-zinc-950 border border-white/5 rounded-[3rem] shadow-3xl">
           <div className="mb-16">
             <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 tracking-tight">반복 지출 규모를 확인하세요</h2>
-            <p className="text-zinc-500 font-medium">팀 규모와 사용 중인 도구 수를 입력하면 예상 반복 지출을 바로 확인할 수 있습니다.</p>
+            <p className="text-zinc-500 font-medium">팀 규모와 도구 수를 입력하면 예상 구독 비용이 바로 계산됩니다.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-16 text-left">
@@ -135,7 +135,7 @@ export default function LandingPage() {
           </div>
 
           <div className="pt-12 border-t border-white/5 text-center">
-            <p className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.4em] mb-4">현재 관리되지 않는 반복 지출 (추정)</p>
+            <p className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.4em] mb-4">관리 대상 연간 구독 비용</p>
             <div className="space-y-2 mb-10">
               <div className="text-3xl sm:text-4xl font-black text-zinc-400 tabular-nums tracking-tighter">
                 ₩{monthlySpend.toLocaleString()} / 월
@@ -143,8 +143,11 @@ export default function LandingPage() {
               <div className="text-5xl sm:text-7xl font-black text-white tabular-nums tracking-tighter">
                 ₩{yearlySpend.toLocaleString()} / 연
               </div>
+              <p className="text-zinc-500 text-sm font-medium mt-2">
+                자동 갱신 전에 점검하면 불필요한 지출을 줄일 수 있습니다.
+              </p>
               <div className="text-zinc-600 text-[10px] font-mono mt-4">
-                예: {employees}명 팀 × {tools}개 도구 × ₩{spend.toLocaleString()} → 약 ₩{yearlySpend.toLocaleString()} / 연
+                예: {employees}명 × {tools}개 × ₩{spend.toLocaleString()} → 약 ₩{yearlySpend.toLocaleString()} / 연
               </div>
             </div>
 

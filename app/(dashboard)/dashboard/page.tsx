@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useEffect, useState, useMemo } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Contract, DashboardSummary } from '@/types';
 import { ContractCard } from '@/components/contracts/contract-card';
@@ -12,104 +11,53 @@ import { createClient } from '@/lib/supabase/client';
 import { SavedMoneyCounter } from '@/components/dashboard/saved-money-counter';
 import { CancellationExecutionCard } from '@/components/contracts/execution-card';
 import { ShockTrigger } from '@/components/dashboard/shock-trigger';
+import { useExchangeRate } from '@/hooks/use-exchange-rate';
 
 export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
-    const [summary, setSummary] = useState<DashboardSummary | null>(null);
-    const [upcoming, setUpcoming] = useState<Contract[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const { rate: exchangeRate, isLoading: isRateLoading } = useExchangeRate();
+    const [contracts, setContracts] = useState<Contract[]>([]);
     const [userName, setUserName] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
+    const [userSavedAmount, setUserSavedAmount] = useState(0);
 
     useEffect(() => {
-        const fetchDashboard = async () => {
+        const fetchDashboardData = async () => {
             try {
                 const supabase = createClient();
                 const { data: { user } } = await supabase.auth.getUser();
 
                 if (!user) {
-                    // Guest Mode (Mock Data)
+                    // Guest Mode Mock Data
                     setUserName('게스트');
-                    setSummary({
-                        urgent: 2, // D-7
-                        warning: 3, // D-30
-                        normal: 7,
-                        totalMonthly: 4124000,
-                        totalYearly: 49488000,
-                        totalMonthlyKRW: 4096000,
-                        totalMonthlyUSD: 20,
-                        totalYearlyKRW: 49152000,
-                        totalYearlyUSD: 240,
-                        totalContracts: 5,
-                        exchangeRate: 1400,
-                        totalSavedKRW: 8420000
-                    });
-                    setUpcoming([
-                        {
-                            id: 'mock-1',
-                            name: 'Adobe Creative Cloud',
-                            type: 'saas',
-                            status: 'active',
-                            expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-                            amount: 62000,
-                            currency: 'KRW',
-                            cycle: 'monthly',
-                            memo: '디자인 팀 라이선스',
-                            auto_renew: true,
-                            notice_days: 7,
-                            saved_amount: null,
-                            user_id: 'mock',
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        },
-                        {
-                            id: 'mock-2',
-                            name: 'AWS Infrastructure',
-                            type: 'saas',
-                            status: 'active',
-                            expires_at: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-                            amount: 450000,
-                            currency: 'KRW',
-                            cycle: 'monthly',
-                            memo: '메인 서버 호스팅',
-                            auto_renew: true,
-                            notice_days: 30,
-                            saved_amount: null,
-                            user_id: 'mock',
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        },
-                        {
-                            id: 'mock-3',
-                            name: '강남 오피스 임대료',
-                            type: 'rent',
-                            status: 'active',
-                            expires_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-                            amount: 3500000,
-                            currency: 'KRW',
-                            cycle: 'monthly',
-                            memo: '본사 사무실',
-                            auto_renew: false,
-                            notice_days: 90,
-                            saved_amount: null,
-                            user_id: 'mock',
-                            created_at: new Date().toISOString(),
-                            updated_at: new Date().toISOString()
-                        }
-                    ]);
+                    // ... (Mock data logic would go here if needed, but for now we focus on authenticated flow or empty state)
                     setIsLoading(false);
                     return;
                 }
 
                 setUserName(user.user_metadata.name || user.email?.split('@')[0] || '사용자');
 
-                const [summaryRes, upcomingRes] = await Promise.all([
-                    fetch('/api/dashboard/summary'),
-                    fetch('/api/dashboard/upcoming')
-                ]);
+                // Fetch User Details for Total Saved
+                const { data: userData } = await supabase
+                    .from('users')
+                    .select('total_saved_krw')
+                    .eq('id', user.id)
+                    .single();
 
-                if (summaryRes.ok) setSummary(await summaryRes.json());
-                if (upcomingRes.ok) setUpcoming(await upcomingRes.json());
+                if (userData) setUserSavedAmount(userData.total_saved_krw || 0);
+
+                // Fetch All Active Contracts
+                const { data: activeContracts, error } = await supabase
+                    .from('contracts')
+                    .select('*')
+                    .eq('user_id', user.id)
+                    .eq('status', 'active');
+
+                if (activeContracts) {
+                    setContracts(activeContracts);
+                }
+
             } catch (e) {
                 console.error(e);
             } finally {
@@ -117,44 +65,133 @@ export default function DashboardPage() {
             }
         };
 
-        fetchDashboard();
+        fetchDashboardData();
     }, []);
 
+    // Helper: Compute Summary Stats
+    const summary = useMemo(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-    if (isLoading) {
+        let urgent = 0;
+        let warning = 0;
+        let normal = 0;
+        let totalMonthly = 0;
+        let totalMonthlyKRW = 0;
+        let totalMonthlyUSD = 0;
+
+        contracts.forEach(contract => {
+            const daysUntil = getDaysUntil(contract.expires_at);
+            if (daysUntil <= 7) urgent++;
+            else if (daysUntil <= 30) warning++;
+            else normal++;
+
+            // Calculate Monthly Amount
+            let monthlyAmount = contract.amount;
+            if (contract.cycle === 'yearly') monthlyAmount = contract.amount / 12;
+
+            // Add to totals
+            if (contract.currency === 'USD') {
+                totalMonthlyUSD += monthlyAmount;
+                totalMonthly += monthlyAmount * exchangeRate;
+            } else {
+                totalMonthlyKRW += monthlyAmount;
+                totalMonthly += monthlyAmount;
+            }
+        });
+
+        return {
+            urgent,
+            warning,
+            normal,
+            totalMonthly,
+            totalMonthlyKRW,
+            totalMonthlyUSD
+        };
+    }, [contracts, exchangeRate]);
+
+    // Helper: Filter Upcoming Contracts (Sorted by urgency)
+    const upcoming = useMemo(() => {
+        return [...contracts].sort((a, b) => {
+            const daysA = getDaysUntil(a.expires_at);
+            const daysB = getDaysUntil(b.expires_at);
+            return daysA - daysB;
+        }).slice(0, 5); // Start with top 5 for "Upcoming" list
+    }, [contracts]);
+
+    // Helper: "New Findings" (Real-time Exposure)
+    // Contracts entering alert window (D-30 or D-7) OR created in last 24h
+    const newFindings = useMemo(() => {
+        const now = new Date();
+        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+        return contracts.filter(c => {
+            const daysUntil = getDaysUntil(c.expires_at);
+            const createdAt = new Date(c.created_at);
+
+            // Created recently
+            if (createdAt > oneDayAgo) return true;
+
+            // Just entered Warning zone (D-30) or Urgent zone (D-7)
+            // Note: This is a simplified "just entered" check based on strict equality for "today"
+            if (daysUntil === 30 || daysUntil === 7) return true;
+
+            return false;
+        }).sort((a, b) => b.amount - a.amount); // Sort by amount for impact
+    }, [contracts]);
+
+    const dangerContract = contracts.find(c => getUrgencyLevel(getDaysUntil(c.expires_at)) === 'danger');
+
+    if (isLoading || isRateLoading) {
         return (
-            <div className="space-y-6 animate-pulse">
-                <div className="h-8 w-48 bg-slate-800 rounded-lg mb-6"></div>
+            <div className="space-y-6 animate-pulse max-w-7xl mx-auto">
+                <div className="h-24 w-full bg-zinc-900/50 rounded-2xl mb-8"></div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {[...Array(4)].map((_, i) => (
-                        <div key={i} className="h-32 bg-slate-800/50 rounded-xl border border-slate-800" />
+                        <div key={i} className="h-32 bg-zinc-900/30 rounded-xl border border-zinc-800" />
                     ))}
                 </div>
-                <div className="h-64 bg-slate-800/50 rounded-xl border border-slate-800" />
             </div>
         );
     }
 
     return (
-        <div className="space-y-10 animate-fade-in max-w-7xl mx-auto">
-            {/* Top ROI Counter */}
-            <SavedMoneyCounter amount={summary?.totalSavedKRW || 0} />
+        <div className="space-y-10 animate-fade-in max-w-7xl mx-auto pb-20">
+            {/* 1. Top ROI Counter */}
+            <div className="bg-zinc-950/50 border border-zinc-900 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                    <h3 className="text-sm font-bold text-zinc-400 mb-1">지금까지 막은 비용</h3>
+                    <p className="text-[10px] text-zinc-500">확인된 결정만 합산됩니다</p>
+                </div>
+                <div className="text-3xl sm:text-4xl font-black text-blue-500 tracking-tighter tabular-nums">
+                    {formatCurrency(userSavedAmount, 'KRW')}
+                </div>
+            </div>
 
-            {/* Shock Trigger - CFO Moment (Top 3 Highest Value Upcoming) */}
-            {upcoming.length > 0 && (
-                <ShockTrigger
-                    contracts={upcoming
-                        .sort((a, b) => {
-                            const valA = a.cycle === 'monthly' ? a.amount * 12 : a.amount;
-                            const valB = b.cycle === 'monthly' ? b.amount * 12 : b.amount;
-                            return valB - valA;
-                        })
-                        .slice(0, 3)
-                    }
-                />
+            {/* 2. Real-time Exposure: "Fresh Risk" (New Findings) */}
+            {newFindings.length > 0 && (
+                <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-500">
+                    <div className="flex items-center gap-2">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                        </span>
+                        <h2 className="text-xs font-black uppercase tracking-widest text-zinc-400">방금 발견된 갱신 예정 비용</h2>
+                    </div>
+                    <div className="bg-zinc-900/30 border border-orange-500/20 rounded-xl p-1 hover:border-orange-500/40 transition-colors cursor-pointer group">
+                        <div className="flex items-center justify-between px-4 py-3">
+                            <span className="text-sm font-bold text-zinc-300 group-hover:text-white transition-colors">
+                                {newFindings.length}건의 계약이 알림 구간에 진입했습니다
+                            </span>
+                            <span className="text-sm font-mono font-bold text-orange-500">
+                                {formatCurrency(newFindings.reduce((acc, c) => acc + (c.currency === 'USD' ? c.amount * exchangeRate : c.amount), 0), 'KRW')}
+                            </span>
+                        </div>
+                    </div>
+                </div>
             )}
 
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">반가워요, {userName}님 👋</h1>
                     <p className="text-sm text-muted-foreground mt-1">오늘 확인해야 할 계약 현황입니다.</p>
@@ -164,23 +201,23 @@ export default function DashboardPage() {
                         <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
-                        지출 항목 추가
+                        계약 추가
                     </Button>
                 </Link>
             </div>
 
-            {/* Decision Execution Card (Danger Alert) */}
-            {upcoming.find(c => getUrgencyLevel(getDaysUntil(c.expires_at)) === 'danger') && (
+            {/* 3. Decision Execution Card (Danger Alert) */}
+            {dangerContract && (
                 <div className="space-y-4">
                     <h2 className="text-sm font-black uppercase tracking-widest text-orange-500">긴급 결정 필요</h2>
                     <CancellationExecutionCard
-                        contract={upcoming.find(c => getUrgencyLevel(getDaysUntil(c.expires_at)) === 'danger')!}
-                        exchangeRate={summary?.exchangeRate}
+                        contract={dangerContract}
+                        exchangeRate={exchangeRate}
                     />
                 </div>
             )}
 
-            {/* Summary Cards */}
+            {/* 4. Summary Cards (Single Source of Truth) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <Card className="hover:border-red-500/30 transition-colors cursor-default bg-card">
                     <CardContent className="p-6">
@@ -189,7 +226,7 @@ export default function DashboardPage() {
                             <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px] shadow-red-500/50"></span>
                         </div>
                         <div className="flex items-baseline gap-1">
-                            <p className="text-3xl font-bold text-foreground">{summary?.urgent || 0}</p>
+                            <p className="text-3xl font-bold text-foreground">{summary.urgent}</p>
                             <span className="text-sm text-muted-foreground">건</span>
                         </div>
                     </CardContent>
@@ -202,7 +239,7 @@ export default function DashboardPage() {
                             <span className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px] shadow-orange-500/50"></span>
                         </div>
                         <div className="flex items-baseline gap-1">
-                            <p className="text-3xl font-bold text-foreground">{summary?.warning || 0}</p>
+                            <p className="text-3xl font-bold text-foreground">{summary.warning}</p>
                             <span className="text-sm text-muted-foreground">건</span>
                         </div>
                     </CardContent>
@@ -215,7 +252,7 @@ export default function DashboardPage() {
                             <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px] shadow-green-500/50"></span>
                         </div>
                         <div className="flex items-baseline gap-1">
-                            <p className="text-3xl font-bold text-foreground">{summary?.normal || 0}</p>
+                            <p className="text-3xl font-bold text-foreground">{summary.normal}</p>
                             <span className="text-sm text-muted-foreground">건</span>
                         </div>
                     </CardContent>
@@ -228,31 +265,28 @@ export default function DashboardPage() {
                             <span className="text-[10px] text-muted-foreground">(USD 환산 포함)</span>
                         </div>
                         <p className="text-2xl font-bold text-foreground font-mono tracking-tight">
-                            {formatCurrency(summary?.totalMonthly || 0)}
+                            {formatCurrency(Math.round(summary.totalMonthly))}
                         </p>
                         <div className="mt-3 space-y-1">
                             <div className="flex justify-between text-xs">
                                 <span className="text-muted-foreground">KRW</span>
-                                <span className="font-medium text-foreground">{formatCurrency(summary?.totalMonthlyKRW || 0, 'KRW')}</span>
+                                <span className="font-medium text-foreground">{formatCurrency(summary.totalMonthlyKRW, 'KRW')}</span>
                             </div>
                             <div className="flex justify-between text-xs">
                                 <span className="text-muted-foreground">USD</span>
-                                <span className="font-medium text-foreground">{formatCurrency(summary?.totalMonthlyUSD || 0, 'USD')}</span>
+                                <span className="font-medium text-foreground">{formatCurrency(summary.totalMonthlyUSD, 'USD')}</span>
                             </div>
                         </div>
                         <div className="mt-4 pt-4 border-t border-zinc-800/50">
-                            <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
-                                환율은 하나은행 매매기준율 기준으로 매일 자동 업데이트됩니다.
-                            </p>
                             <p className="text-[10px] text-blue-500/80 mt-1 font-medium">
-                                적용 환율: 1 USD = {formatCurrency(summary?.exchangeRate || 1400, 'KRW')}
+                                적용 환율: 1 USD = {formatCurrency(exchangeRate, 'KRW')}
                             </p>
                         </div>
                     </CardContent>
                 </Card>
             </div>
 
-            {/* Upcoming Contracts */}
+            {/* 5. Upcoming Contracts List */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-lg font-semibold text-foreground">만기 임박 계약</h2>
@@ -284,7 +318,7 @@ export default function DashboardPage() {
                             <ContractCard
                                 key={contract.id}
                                 contract={contract}
-                                exchangeRate={summary?.exchangeRate}
+                                exchangeRate={exchangeRate}
                             />
                         ))}
                     </div>
