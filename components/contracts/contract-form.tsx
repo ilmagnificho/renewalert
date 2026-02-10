@@ -93,47 +93,22 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {mode === 'create' && (
                         <div className="space-y-3 mb-8 p-4 bg-muted/30 border border-border rounded-lg">
-                            <label className="text-sm font-medium text-muted-foreground">✨ AI / 인기 서비스 간편 입력</label>
+                            <label className="text-sm font-medium text-muted-foreground">✨ 자주 쓰는 서비스 빠르게 선택</label>
+                            <p className="text-xs text-muted-foreground">서비스명만 선택됩니다. 요금제와 금액은 직접 입력해주세요.</p>
                             <div className="flex flex-wrap gap-2">
                                 {[
-                                    { name: 'ChatGPT Pro', type: 'saas', tier: 'Pro', amount: 200, currency: 'USD', cycle: 'monthly', notice_days: 1 },
-                                    { name: 'Claude Max', type: 'saas', tier: 'Max', amount: 200, currency: 'USD', cycle: 'monthly', notice_days: 1 },
-                                    { name: 'Gemini Pro', type: 'saas', tier: 'Pro', amount: 29000, currency: 'KRW', cycle: 'monthly', notice_days: 1 },
-                                    { name: 'Perplexity Pro', type: 'saas', tier: 'Pro', amount: 20, currency: 'USD', cycle: 'monthly', notice_days: 1 },
-                                    { name: 'Midjourney', type: 'saas', tier: 'Standard', amount: 30, currency: 'USD', cycle: 'monthly', notice_days: 1 },
-                                    { name: 'Runway', type: 'saas', tier: 'Standard', amount: 15, currency: 'USD', cycle: 'monthly', notice_days: 1 },
-                                    { name: 'Cursor', type: 'saas', tier: 'Pro', amount: 20, currency: 'USD', cycle: 'monthly', notice_days: 1 },
-                                    { name: 'GitHub Copilot', type: 'saas', tier: 'Business', amount: 19, currency: 'USD', cycle: 'monthly', notice_days: 1 },
-                                    { name: 'Notion', type: 'saas', tier: 'Plus', amount: 12, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Slack', type: 'saas', tier: 'Pro', amount: 8.75, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Figma', type: 'saas', tier: 'Professional', amount: 15, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Canva', type: 'saas', tier: 'Teams', amount: 15, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Zoom', type: 'saas', tier: 'Pro', amount: 15.99, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Google Workspace', type: 'saas', tier: 'Business Standard', amount: 14.4, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Microsoft 365', type: 'saas', tier: 'Business Standard', amount: 12.5, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Asana', type: 'saas', tier: 'Starter', amount: 10.99, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Trello', type: 'saas', tier: 'Premium', amount: 10, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Jira', type: 'saas', tier: 'Standard', amount: 8.15, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Confluence', type: 'saas', tier: 'Standard', amount: 5.16, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Linear', type: 'saas', tier: 'Standard', amount: 10, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Airtable', type: 'saas', tier: 'Team', amount: 20, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Zapier', type: 'saas', tier: 'Professional', amount: 29.99, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Make', type: 'saas', tier: 'Core', amount: 10.59, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'HubSpot', type: 'saas', tier: 'Starter', amount: 20, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Salesforce', type: 'saas', tier: 'Starter', amount: 25, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Miro', type: 'saas', tier: 'Starter', amount: 8, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Loom', type: 'saas', tier: 'Business', amount: 15, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Dropbox', type: 'saas', tier: 'Standard', amount: 18, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Adobe CC', type: 'saas', tier: 'All Apps', amount: 62000, currency: 'KRW', cycle: 'monthly', notice_days: 14 },
-                                    { name: 'AWS', type: 'saas', tier: 'Usage', amount: 0, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                ].slice(0, 30).map((preset) => (
+                                    'ChatGPT', 'Claude', 'Gemini', 'Perplexity', 'Midjourney', 'Runway', 'Cursor', 'GitHub',
+                                    'Notion', 'Slack', 'Figma', 'Canva', 'Zoom', 'Google Workspace', 'Microsoft 365', 'Asana',
+                                    'Trello', 'Jira', 'Confluence', 'Linear', 'Airtable', 'Zapier', 'Make', 'HubSpot',
+                                    'Salesforce', 'Miro', 'Loom', 'Dropbox', 'Adobe CC', 'AWS'
+                                ].map((serviceName) => (
                                     <button
-                                        key={preset.name}
+                                        key={serviceName}
                                         type="button"
-                                        onClick={() => setFormData({ ...formData, ...preset } as ContractFormData)}
+                                        onClick={() => setFormData({ ...formData, name: serviceName, type: 'saas' })}
                                         className="px-3 py-1.5 text-xs font-medium bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-full border border-border transition-colors shadow-sm"
                                     >
-                                        + {preset.name}
+                                        + {serviceName}
                                     </button>
                                 ))}
                             </div>
@@ -152,8 +127,8 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
                         />
                         <Input
                             id="tier"
-                            label="요금제 (Tier)"
-                            placeholder="예: Plus, Pro, Enterprise"
+                            label="요금제"
+                            placeholder="예: Pro, Team, Enterprise"
                             value={formData.tier || ''}
                             onChange={(e) => setFormData({ ...formData, tier: e.target.value })}
                             className="bg-background border-input"

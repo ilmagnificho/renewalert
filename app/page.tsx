@@ -44,7 +44,7 @@ export default function LandingPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
             </div>
-            <span className="text-lg font-bold tracking-tight text-white uppercase">RenewAlert</span>
+            <span className="text-lg font-extrabold tracking-[0.01em] text-white">Renew<span className="text-blue-300">Alert</span></span>
           </Link>
           <div className="flex items-center gap-6">
             <Link
@@ -70,12 +70,11 @@ export default function LandingPage() {
             <span>의사결정 타이밍 + 비용 손실 방지</span>
           </div>
           <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-[1.05] mb-10 text-white animate-fade-in-up drop-shadow-[0_0_20px_rgba(251,146,60,0.15)]">
-            자동 갱신 결제일 전에<br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-300 via-orange-200 to-amber-300">해지·유지 결정을 끝내세요</span>
+            자동 결제 전에<br />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-amber-200 to-yellow-300">결정하세요</span>
           </h1>
           <p className="text-lg sm:text-2xl text-zinc-500 max-w-3xl mx-auto mb-12 leading-relaxed px-4 font-medium">
-            RenewAlert은 반복 지출을 통제하는 실행 도구입니다.<br className="hidden md:block" />
-            자동 결제가 확정되기 전에 해지·유지 결정을 끝낼 시간을 확보해드립니다.
+            자동 결제 전에 검토할 시간을 확보하세요.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link

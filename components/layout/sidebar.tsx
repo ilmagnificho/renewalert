@@ -41,7 +41,9 @@ export function Sidebar() {
                             </svg>
                         </div>
                         <div className="flex flex-col leading-tight">
-                            <span className="text-xl font-extrabold tracking-tight text-white uppercase">RenewAlert</span>
+                            <span className="text-xl font-black tracking-[0.01em] text-white">
+                                Renew<span className="text-blue-400">Alert</span>
+                            </span>
                             <span className="text-[10px] text-zinc-400 font-semibold tracking-wide">반복 지출 통제 시스템</span>
                         </div>
                     </div>

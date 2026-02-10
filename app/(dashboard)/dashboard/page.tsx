@@ -19,6 +19,7 @@ export default function DashboardPage() {
     const [userName, setUserName] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [userSavedAmount, setUserSavedAmount] = useState(0);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     useEffect(() => {
         const supabase = createClient();
@@ -33,11 +34,13 @@ export default function DashboardPage() {
                     setUserName('게스트');
                     setContracts([]);
                     setUserSavedAmount(0);
+                    setCurrentUserId(null);
                     setIsLoading(false);
                     return;
                 }
 
                 if (isMounted) {
+                    setCurrentUserId(user.id);
                     setUserName(user.user_metadata.name || user.email?.split('@')[0] || '사용자');
                 }
 
@@ -80,26 +83,45 @@ export default function DashboardPage() {
 
         fetchDashboardData();
 
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!currentUserId) return;
+
+        const supabase = createClient();
+
         const contractsChannel = supabase
-            .channel('dashboard-contracts')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'contracts' }, () => {
-                fetchDashboardData();
+            .channel(`dashboard-contracts-${currentUserId}`)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'contracts', filter: `user_id=eq.${currentUserId}` }, () => {
+                void (async () => {
+                    const { data } = await supabase
+                        .from('contracts')
+                        .select('*')
+                        .eq('user_id', currentUserId)
+                        .eq('status', 'active');
+                    if (data) {
+                        setContracts(data.filter((contract) => contract.decision_status == null));
+                    }
+                })();
             })
             .subscribe();
 
         const usersChannel = supabase
-            .channel('dashboard-users')
-            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, () => {
-                fetchDashboardData();
+            .channel(`dashboard-users-${currentUserId}`)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users', filter: `id=eq.${currentUserId}` }, (payload) => {
+                const nextSaved = Number((payload.new as { total_saved_krw?: number })?.total_saved_krw || 0);
+                setUserSavedAmount(nextSaved);
             })
             .subscribe();
 
         return () => {
-            isMounted = false;
             supabase.removeChannel(contractsChannel);
             supabase.removeChannel(usersChannel);
         };
-    }, []);
+    }, [currentUserId]);
 
     // Helper: Compute Summary Stats
     const summary = useMemo(() => {
@@ -164,7 +186,7 @@ export default function DashboardPage() {
 
     if (isLoading || isRateLoading) {
         return (
-            <div className="space-y-6 animate-pulse max-w-7xl mx-auto">
+            <div className="space-y-6 animate-pulse w-full">
                 <div className="h-24 w-full bg-zinc-900/50 rounded-2xl mb-8"></div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {[...Array(4)].map((_, i) => (
@@ -176,7 +198,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="space-y-10 animate-fade-in max-w-7xl mx-auto pb-20">
+        <div className="space-y-10 animate-fade-in w-full pb-20">
             {/* 1. Top ROI Counter */}
             <div className="bg-zinc-950/50 border border-zinc-900 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div>
