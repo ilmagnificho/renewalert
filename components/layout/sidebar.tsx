@@ -23,6 +23,8 @@ export function Sidebar() {
 
     const handleSignOut = async () => {
         await supabase.auth.signOut();
+        // Clear guest mode cookie
+        document.cookie = "guest_mode=; path=/; max-age=0";
         router.push('/login');
         router.refresh();
     };
