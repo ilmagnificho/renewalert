@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Contract, DashboardSummary } from '@/types';
 import { ContractCard } from '@/components/contracts/contract-card';
@@ -14,7 +14,6 @@ import { createClient } from '@/lib/supabase/client';
 export const dynamic = 'force-dynamic';
 
 export default function ContractsPage() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const [contracts, setContracts] = useState<Contract[]>([]);
     const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -23,11 +22,52 @@ export default function ContractsPage() {
     const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || 'all');
     const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'active');
 
-    useEffect(() => {
-        fetchContracts();
-    }, [typeFilter, statusFilter]);
+    const buildSummaryFromContracts = (items: Contract[]): DashboardSummary => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
 
-    const fetchContracts = async () => {
+        let urgent = 0;
+        let warning = 0;
+        let normal = 0;
+        let totalMonthlyKRW = 0;
+        let totalMonthlyUSD = 0;
+        const exchangeRate = 1400;
+
+        items.filter((contract) => contract.status === 'active').forEach((contract) => {
+            const expiresAt = new Date(contract.expires_at);
+            expiresAt.setHours(0, 0, 0, 0);
+            const diff = Math.ceil((expiresAt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+            if (diff <= 7) urgent++;
+            else if (diff <= 30) warning++;
+            else normal++;
+
+            const amount = Number(contract.amount);
+            const monthlyAmount = contract.cycle === 'yearly' ? Math.round(amount / 12) : amount;
+
+            if (contract.currency === 'USD') totalMonthlyUSD += monthlyAmount;
+            else totalMonthlyKRW += monthlyAmount;
+        });
+
+        const totalMonthly = totalMonthlyKRW + (totalMonthlyUSD * exchangeRate);
+
+        return {
+            urgent,
+            warning,
+            normal,
+            totalMonthly,
+            totalYearly: totalMonthly * 12,
+            totalMonthlyKRW,
+            totalMonthlyUSD,
+            totalYearlyKRW: totalMonthlyKRW * 12,
+            totalYearlyUSD: totalMonthlyUSD * 12,
+            totalContracts: items.length,
+            exchangeRate,
+            totalSavedKRW: 0,
+        };
+    };
+
+    const fetchContracts = useCallback(async () => {
         setIsLoading(true);
 
         const supabase = createClient();
@@ -154,18 +194,29 @@ export default function ContractsPage() {
         if (search) params.set('search', search);
 
         const [contractsRes, summaryRes] = await Promise.all([
-            fetch(`/api/contracts?${params.toString()}`),
-            fetch('/api/dashboard/summary')
+            fetch(`/api/contracts?${params.toString()}`, { cache: 'no-store' }),
+            fetch('/api/dashboard/summary', { cache: 'no-store' })
         ]);
 
+        let fetchedContracts: Contract[] = [];
         if (contractsRes.ok) {
-            setContracts(await contractsRes.json());
+            fetchedContracts = await contractsRes.json();
+            setContracts(fetchedContracts);
         }
+
         if (summaryRes.ok) {
             setSummary(await summaryRes.json());
+        } else {
+            setSummary(buildSummaryFromContracts(fetchedContracts));
         }
+
         setIsLoading(false);
-    };
+    }, [search, statusFilter, typeFilter]);
+
+
+    useEffect(() => {
+        fetchContracts();
+    }, [fetchContracts]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();

@@ -74,7 +74,7 @@ export default function LandingPage() {
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-amber-200 to-yellow-300">결정하세요</span>
           </h1>
           <p className="text-lg sm:text-2xl text-zinc-500 max-w-3xl mx-auto mb-12 leading-relaxed px-4 font-medium">
-            자동 결제 전에 검토할 시간을 확보하세요.
+            깜빡하면 오늘도 쓰지 않는 서비스에 30만원이 결제됩니다.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link

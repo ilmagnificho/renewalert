@@ -80,9 +80,35 @@ export async function POST(
 
     if (userUpdateError) {
         // Fallback to manual update if RPC doesn't exist yet
-        const { data: userData } = await supabase.from('users').select('total_saved_krw').eq('id', user.id).single();
-        const currentTotal = Number(userData?.total_saved_krw || 0);
-        await supabase.from('users').update({ total_saved_krw: currentTotal + savedKRW }).eq('id', user.id);
+        const { data: userData } = await supabase
+            .from('users')
+            .select('id, total_saved_krw')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (userData) {
+            const currentTotal = Number(userData.total_saved_krw || 0);
+            const { error: fallbackUpdateError } = await supabase
+                .from('users')
+                .update({ total_saved_krw: currentTotal + savedKRW })
+                .eq('id', user.id);
+
+            if (fallbackUpdateError) {
+                return NextResponse.json({ error: fallbackUpdateError.message }, { status: 500 });
+            }
+        } else {
+            const { error: upsertError } = await supabase
+                .from('users')
+                .upsert({
+                    id: user.id,
+                    email: user.email || `${user.id}@renewalert.local`,
+                    total_saved_krw: savedKRW,
+                }, { onConflict: 'id' });
+
+            if (upsertError) {
+                return NextResponse.json({ error: upsertError.message }, { status: 500 });
+            }
+        }
     }
 
     return NextResponse.json(updatedContract);

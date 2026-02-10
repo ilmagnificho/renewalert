@@ -14,7 +14,7 @@ export async function GET() {
         .from('users')
         .select('total_saved_krw')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
     if (userError) {
         return NextResponse.json({ error: userError.message }, { status: 500 });
