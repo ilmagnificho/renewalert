@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Contract } from '@/types';
+import { Card, CardContent } from '@/components/ui/card';
+import { Contract, DashboardSummary } from '@/types';
 import { ContractCard } from '@/components/contracts/contract-card';
 import { Button } from '@/components/ui/button';
 import { Input, Select } from '@/components/ui/input';
 import Link from 'next/link';
+import { formatCurrency } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 
 export const dynamic = 'force-dynamic';
@@ -15,6 +17,7 @@ export default function ContractsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [contracts, setContracts] = useState<Contract[]>([]);
+    const [summary, setSummary] = useState<DashboardSummary | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [search, setSearch] = useState(searchParams.get('search') || '');
     const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || 'all');
@@ -33,6 +36,7 @@ export default function ContractsPage() {
         if (!user) {
             // Guest Mode (Mock Data) 
             const mockData: Contract[] = [
+                // ... (existing mock data)
                 {
                     id: 'mock-1',
                     name: 'Adobe Creative Cloud',
@@ -55,7 +59,7 @@ export default function ContractsPage() {
                     type: 'saas',
                     status: 'active',
                     expires_at: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-                    amount: 450000,
+                    amount: 20,
                     currency: 'USD',
                     cycle: 'monthly',
                     memo: '메인 서버 호스팅',
@@ -122,6 +126,18 @@ export default function ContractsPage() {
             if (search) filtered = filtered.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
 
             setContracts(filtered);
+            setSummary({
+                urgent: 1,
+                warning: 1,
+                normal: 2,
+                totalMonthly: 4124000,
+                totalYearly: 49488000,
+                totalMonthlyKRW: 4096000,
+                totalMonthlyUSD: 20,
+                totalYearlyKRW: 49152000,
+                totalYearlyUSD: 240,
+                totalContracts: 5
+            });
             setIsLoading(false);
             return;
         }
@@ -131,10 +147,16 @@ export default function ContractsPage() {
         if (statusFilter !== 'all') params.set('status', statusFilter);
         if (search) params.set('search', search);
 
-        const res = await fetch(`/api/contracts?${params.toString()}`);
-        if (res.ok) {
-            const data = await res.json();
-            setContracts(data);
+        const [contractsRes, summaryRes] = await Promise.all([
+            fetch(`/api/contracts?${params.toString()}`),
+            fetch('/api/dashboard/summary')
+        ]);
+
+        if (contractsRes.ok) {
+            setContracts(await contractsRes.json());
+        }
+        if (summaryRes.ok) {
+            setSummary(await summaryRes.json());
         }
         setIsLoading(false);
     };
@@ -179,7 +201,68 @@ export default function ContractsPage() {
                 </Link>
             </div>
 
-            {/* Filters */}
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <Card className="hover:border-red-500/30 transition-colors cursor-default bg-card">
+                    <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-sm font-medium text-muted-foreground">긴급 (D-7)</span>
+                            <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px] shadow-red-500/50"></span>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                            <p className="text-3xl font-bold text-foreground">{summary?.urgent || 0}</p>
+                            <span className="text-sm text-muted-foreground">건</span>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="hover:border-orange-500/30 transition-colors cursor-default bg-card">
+                    <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-sm font-medium text-muted-foreground">주의 (D-30)</span>
+                            <span className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px] shadow-orange-500/50"></span>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                            <p className="text-3xl font-bold text-foreground">{summary?.warning || 0}</p>
+                            <span className="text-sm text-muted-foreground">건</span>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="hover:border-blue-500/30 transition-colors cursor-default bg-card">
+                    <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-sm font-medium text-muted-foreground">정상</span>
+                            <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px] shadow-green-500/50"></span>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                            <p className="text-3xl font-bold text-foreground">{summary?.normal || 0}</p>
+                            <span className="text-sm text-muted-foreground">건</span>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 dark:from-slate-900 dark:to-slate-800 from-white to-slate-50 border-border">
+                    <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="text-sm font-medium text-blue-400">월 예상 구독료 (합산)</span>
+                        </div>
+                        <p className="text-2xl font-bold text-foreground font-mono tracking-tight">
+                            {formatCurrency(summary?.totalMonthly || 0)}
+                        </p>
+                        <div className="mt-3 space-y-1">
+                            <div className="flex justify-between text-[10px]">
+                                <span className="text-muted-foreground">KRW</span>
+                                <span className="font-medium text-foreground">{formatCurrency(summary?.totalMonthlyKRW || 0, 'KRW')}</span>
+                            </div>
+                            <div className="flex justify-between text-[10px]">
+                                <span className="text-muted-foreground">USD</span>
+                                <span className="font-medium text-foreground">{formatCurrency(summary?.totalMonthlyUSD || 0, 'USD')}</span>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
             <div className="p-4 bg-muted/30 border border-border rounded-xl backdrop-blur-sm">
                 <div className="flex flex-col sm:flex-row gap-4">
                     <form onSubmit={handleSearch} className="flex-1 relative">
