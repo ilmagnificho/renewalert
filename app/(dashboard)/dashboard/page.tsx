@@ -24,23 +24,26 @@ export default function DashboardPage() {
                 const supabase = createClient();
                 const { data: { user } } = await supabase.auth.getUser();
 
-                if (!user) {
-                    const [summaryRes, upcomingRes] = await Promise.all([
-                        fetch('/api/dashboard/summary'),
-                        fetch('/api/dashboard/upcoming')
-                    ]);
-
-                    if (summaryRes.ok) setSummary(await summaryRes.json());
-                    if (upcomingRes.ok) setUpcoming(await upcomingRes.json());
-                } catch (e) {
-                    console.error(e);
-                } finally {
-                    setIsLoading(false);
+                if (user) {
+                    setUserName(user.user_metadata.name || user.email?.split('@')[0] || '사용자');
                 }
-            };
 
-            fetchDashboard();
-        }, []);
+                const [summaryRes, upcomingRes] = await Promise.all([
+                    fetch('/api/dashboard/summary'),
+                    fetch('/api/dashboard/upcoming')
+                ]);
+
+                if (summaryRes.ok) setSummary(await summaryRes.json());
+                if (upcomingRes.ok) setUpcoming(await upcomingRes.json());
+            } catch (e) {
+                console.error(e);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchDashboard();
+    }, []);
 
 
     if (isLoading) {
