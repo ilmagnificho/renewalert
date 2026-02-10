@@ -2,13 +2,23 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { ShockTrigger } from '@/components/dashboard/shock-trigger';
 
 export default function LandingPage() {
-  const [employees, setEmployees] = useState(50);
-  const [tools, setTools] = useState(15);
-  const [spend, setSpend] = useState(50000); // per tool per month
+  const [employees, setEmployees] = useState(12);
+  const [tools, setTools] = useState(8);
+  const [spend, setSpend] = useState(45000);
 
-  const estimatedWaste = employees * tools * (spend * 0.2) * 12;
+  const monthlySpend = employees * tools * spend;
+  const yearlySpend = monthlySpend * 12;
+  const recoverableSpendMin = yearlySpend * 0.15;
+  const recoverableSpendMax = yearlySpend * 0.35;
+
+  const mockAtRisk = [
+    { name: 'AWS', amount: 4800000, currency: 'KRW', cycle: 'yearly' },
+    { name: 'Figma', amount: 2340000, currency: 'KRW', cycle: 'yearly' },
+    { name: 'Slack', amount: 1920000, currency: 'KRW', cycle: 'yearly' },
+  ];
 
   return (
     <div className="min-h-screen bg-[#000000] text-foreground overflow-x-hidden selection:bg-white selection:text-black font-sans">
@@ -72,7 +82,7 @@ export default function LandingPage() {
               href="/login?auto_demo=true"
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-black font-black px-10 py-5 rounded-2xl hover:bg-zinc-200 transition-all duration-300 text-xl shadow-2xl shadow-white/10"
             >
-              무료로 리스크 진단하기
+              우리 팀 지출 관리 시작하기
             </Link>
           </div>
           <p className="mt-8 text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">
@@ -81,32 +91,24 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* At-Risk Money Label */}
-      <section className="py-12 z-10 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex flex-col items-center justify-center p-12 border border-white/5 bg-zinc-950/50 rounded-[2.5rem] text-center backdrop-blur-sm">
-            <span className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em] mb-4">현재 방어 중인 누적 비용</span>
-            <div className="text-6xl sm:text-8xl font-black text-white tabular-nums tracking-tighter mb-4">
-              ₩2,410,500,000
-            </div>
-            <p className="text-zinc-500 text-sm font-bold">RenewAlert 사용자들이 불필요한 갱신을 차단하여 지켜낸 실제 비용입니다.</p>
-          </div>
-        </div>
+      {/* Shock Trigger - CFO Moment */}
+      <section className="max-w-4xl mx-auto px-6 z-10 relative">
+        <ShockTrigger contracts={mockAtRisk} />
       </section>
 
       {/* Waste Calculator Section */}
       <section className="py-24 px-6 z-10 text-center">
         <div className="max-w-4xl mx-auto p-12 bg-zinc-950 border border-white/5 rounded-[3rem] shadow-3xl">
           <div className="mb-16">
-            <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 tracking-tight">지출 리스크 시뮬레이션</h2>
-            <p className="text-zinc-500 font-medium">관리하지 않는 고정비는 곧 확정된 손실입니다.</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 tracking-tight">반복 지출 규모를 확인하세요</h2>
+            <p className="text-zinc-500 font-medium">팀 규모와 사용 중인 도구 수를 입력하면 예상 반복 지출을 바로 확인할 수 있습니다.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-16 text-left">
             <div className="space-y-4">
               <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">조직 규모 (인원)</label>
               <input
-                type="range" min="1" max="500" value={employees}
+                type="range" min="1" max="100" value={employees}
                 onChange={(e) => setEmployees(parseInt(e.target.value))}
                 className="w-full accent-white h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
               />
@@ -115,16 +117,16 @@ export default function LandingPage() {
             <div className="space-y-4">
               <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">사용 중인 SaaS 개수</label>
               <input
-                type="range" min="1" max="100" value={tools}
+                type="range" min="1" max="50" value={tools}
                 onChange={(e) => setTools(parseInt(e.target.value))}
                 className="w-full accent-white h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
               />
               <div className="text-2xl font-black text-white">{tools}개</div>
             </div>
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">평균 월 지출 (단위당)</label>
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">평균 월 구독 비용</label>
               <input
-                type="range" min="10000" max="500000" step="10000" value={spend}
+                type="range" min="10000" max="300000" step="5000" value={spend}
                 onChange={(e) => setSpend(parseInt(e.target.value))}
                 className="w-full accent-white h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
               />
@@ -132,16 +134,39 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="pt-12 border-t border-white/5">
-            <p className="text-zinc-500 text-[10px] font-black mb-4 uppercase tracking-[0.4em]">연간 잠재적 노출 리스크</p>
-            <div className="text-5xl sm:text-7xl font-black text-white mb-10 tracking-tighter tabular-nums">
-              ₩{estimatedWaste.toLocaleString()}
+          <div className="pt-12 border-t border-white/5 text-center">
+            <p className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.4em] mb-4">현재 관리되지 않는 반복 지출 (추정)</p>
+            <div className="space-y-2 mb-10">
+              <div className="text-3xl sm:text-4xl font-black text-zinc-400 tabular-nums tracking-tighter">
+                ₩{monthlySpend.toLocaleString()} / 월
+              </div>
+              <div className="text-5xl sm:text-7xl font-black text-white tabular-nums tracking-tighter">
+                ₩{yearlySpend.toLocaleString()} / 연
+              </div>
+              <div className="text-zinc-600 text-[10px] font-mono mt-4">
+                예: {employees}명 팀 × {tools}개 도구 × ₩{spend.toLocaleString()} → 약 ₩{yearlySpend.toLocaleString()} / 연
+              </div>
             </div>
+
+            <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-6 mb-12 inline-block">
+              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-2">사전 점검으로 줄일 수 있는 비용 (예상)</p>
+              <div className="text-2xl sm:text-3xl font-black text-blue-400 tracking-tight">
+                ₩{recoverableSpendMin.toLocaleString()} ~ ₩{recoverableSpendMax.toLocaleString()} / 연
+              </div>
+            </div>
+
+            <div className="block mb-10">
+              <p className="text-zinc-400 text-sm font-bold">
+                단 한 건의 자동 갱신만 막아도 <br className="sm:hidden" />
+                RenewAlert은 1년 사용 비용을 회수할 수 있습니다.
+              </p>
+            </div>
+
             <Link
               href="/login"
               className="inline-flex items-center justify-center gap-2 bg-white text-black font-black px-12 py-5 rounded-2xl hover:bg-zinc-200 transition-all duration-300 text-xl"
             >
-              리스크 전수 조사 시작하기
+              우리 팀 지출 관리 시작하기
             </Link>
           </div>
         </div>

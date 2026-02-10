@@ -11,6 +11,7 @@ import { formatCurrency, getUrgencyLevel, getDaysUntil } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
 import { SavedMoneyCounter } from '@/components/dashboard/saved-money-counter';
 import { CancellationExecutionCard } from '@/components/contracts/execution-card';
+import { ShockTrigger } from '@/components/dashboard/shock-trigger';
 
 export const dynamic = 'force-dynamic';
 
@@ -138,6 +139,20 @@ export default function DashboardPage() {
         <div className="space-y-10 animate-fade-in max-w-7xl mx-auto">
             {/* Top ROI Counter */}
             <SavedMoneyCounter amount={summary?.totalSavedKRW || 0} />
+
+            {/* Shock Trigger - CFO Moment (Top 3 Highest Value Upcoming) */}
+            {upcoming.length > 0 && (
+                <ShockTrigger
+                    contracts={upcoming
+                        .sort((a, b) => {
+                            const valA = a.cycle === 'monthly' ? a.amount * 12 : a.amount;
+                            const valB = b.cycle === 'monthly' ? b.amount * 12 : b.amount;
+                            return valB - valA;
+                        })
+                        .slice(0, 3)
+                    }
+                />
+            )}
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
