@@ -62,62 +62,56 @@ function LoginContent() {
 
     const handleDemoLogin = async () => {
         setIsDemoLoading(true);
-        // Attempt to login with demo account
-        const demoEmail = 'demo@renewalert.com';
-        const demoPassword = 'demo1234';
+        // Use a unique random email for each guest session to avoid conflicts
+        const randomId = Math.random().toString(36).slice(2, 7);
+        const demoEmail = `guest_${randomId}@example.com`;
+        const demoPassword = `guest${randomId}!`;
 
-        let { error } = await supabase.auth.signInWithPassword({
-            email: demoEmail,
-            password: demoPassword,
-        });
-
-        // If login fails (likely user doesn't exist), try to sign up automatically
-        if (error) {
-            const { error: signUpError } = await supabase.auth.signUp({
+        try {
+            const { data, error: signUpError } = await supabase.auth.signUp({
                 email: demoEmail,
                 password: demoPassword,
                 options: {
                     data: {
-                        name: '데모 사용자',
+                        name: `게스트_${randomId}`,
                     }
                 }
             });
 
             if (signUpError) {
-                // If signup fails because user exists (race condition or weird state), try login again
-                if (signUpError.message.includes('already registered')) {
-                    const { error: retryError } = await supabase.auth.signInWithPassword({
-                        email: demoEmail,
-                        password: demoPassword,
-                    });
-                    if (retryError) {
-                        addToast('error', '데모 로그인 실패. 관리자에게 문의하세요.');
-                        setIsDemoLoading(false);
-                        return;
-                    }
-                } else {
-                    addToast('error', '데모 계정 생성에 실패했습니다. 관리자에게 문의하세요.');
-                    setIsDemoLoading(false);
-                    return;
-                }
+                console.error('Demo Signup Error:', signUpError);
+                addToast('error', `계정 생성 실패: ${signUpError.message}`);
+                setIsDemoLoading(false);
+                return;
+            }
+
+            if (data?.session) {
+                addToast('success', '체험하기(게스트) 모드로 시작합니다.');
+                router.push('/dashboard');
+                router.refresh();
             } else {
-                // Try login again after signup just to be sure session is set or handle auto-login behavior
-                const { error: retryError } = await supabase.auth.signInWithPassword({
+                // If signup success but no session, it implies Email Confirmation is likely ON
+                console.warn('Signup successful but no session. Check Supabase Email Confirmation settings.');
+
+                // Try to sign in immediately (works if email confirmation is OFF or if implicit flow works)
+                const { error: signInError } = await supabase.auth.signInWithPassword({
                     email: demoEmail,
                     password: demoPassword,
                 });
-                if (retryError) {
-                    // Sometimes signup auto-logs in depending on config, but explicit login is safer
-                    addToast('error', '데모 로그인 재시도 실패.');
+
+                if (!signInError) {
+                    router.push('/dashboard');
+                    router.refresh();
+                } else {
+                    addToast('info', '계정이 생성되었으나 자동 로그인이 안됩니다. Supabase Authentication -> Providers -> Email -> Confirm email 설정을 해제해주세요.');
                     setIsDemoLoading(false);
-                    return;
                 }
             }
+        } catch (err) {
+            console.error('Unexpected Demo Error:', err);
+            addToast('error', '알 수 없는 오류가 발생했습니다.');
+            setIsDemoLoading(false);
         }
-
-        addToast('success', '체험하기 모드로 시작합니다.');
-        router.push('/dashboard');
-        router.refresh();
     };
 
     return (
