@@ -61,8 +61,12 @@ export interface DashboardSummary {
   urgent: number;    // D-7 이하
   warning: number;   // D-30 이하
   normal: number;    // D-30 초과
-  totalMonthly: number;
-  totalYearly: number;
+  totalMonthly: number; // KRW Total (Approx)
+  totalYearly: number; // KRW Total (Approx)
+  totalMonthlyKRW: number;
+  totalMonthlyUSD: number;
+  totalYearlyKRW: number;
+  totalYearlyUSD: number;
   totalContracts: number;
 }
 

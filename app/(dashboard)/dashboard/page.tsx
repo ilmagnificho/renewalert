@@ -31,9 +31,13 @@ export default function DashboardPage() {
                         urgent: 2, // D-7
                         warning: 3, // D-30
                         normal: 7,
-                        totalMonthly: 1250000,
-                        totalYearly: 15000000,
-                        totalContracts: 12
+                        totalMonthly: 4124000,
+                        totalYearly: 49488000,
+                        totalMonthlyKRW: 4096000, // Roughly calculated for mock
+                        totalMonthlyUSD: 20,
+                        totalYearlyKRW: 49152000,
+                        totalYearlyUSD: 240,
+                        totalContracts: 5
                     });
                     setUpcoming([
                         {
@@ -181,15 +185,25 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 dark:from-slate-900 dark:to-slate-800 from-white to-slate-50 border-border">
+                <Card className="col-span-1 lg:col-span-1 bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 dark:from-slate-900 dark:to-slate-800 from-white to-slate-50 border-border">
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <span className="text-sm font-medium text-blue-500 dark:text-blue-200">월 예상 구독료</span>
+                            <span className="text-sm font-medium text-blue-500 dark:text-blue-200">월 예상 구독료 (합산)</span>
                         </div>
                         <p className="text-2xl font-bold text-foreground dark:text-white font-mono tracking-tight">
                             {formatCurrency(summary?.totalMonthly || 0)}
                         </p>
-                        <p className="text-xs text-muted-foreground dark:text-slate-400 mt-2">연간 {formatCurrency(summary?.totalYearly || 0)}</p>
+                        <div className="mt-3 space-y-1">
+                            <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground">KRW</span>
+                                <span className="font-medium text-foreground">{formatCurrency(summary?.totalMonthlyKRW || 0, 'KRW')}</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="text-muted-foreground">USD</span>
+                                <span className="font-medium text-foreground">{formatCurrency(summary?.totalMonthlyUSD || 0, 'USD')}</span>
+                            </div>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground/50 mt-2 text-right">* USD는 약 1,400원 기준</p>
                     </CardContent>
                 </Card>
             </div>

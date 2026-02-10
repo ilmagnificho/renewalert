@@ -25,8 +25,13 @@ export async function GET() {
     let urgent = 0;
     let warning = 0;
     let normal = 0;
-    let totalMonthly = 0;
-    let totalYearly = 0;
+
+    let totalMonthlyKRW = 0;
+    let totalMonthlyUSD = 0;
+    let totalYearlyKRW = 0;
+    let totalYearlyUSD = 0;
+
+    const EXCHANGE_RATE = 1400; // 1 USD = 1400 KRW (Approx)
 
     (contracts || []).forEach((contract) => {
         const expiresAt = new Date(contract.expires_at);
@@ -38,16 +43,37 @@ export async function GET() {
         else normal++;
 
         const amount = Number(contract.amount);
+        const isUSD = contract.currency === 'USD';
+
+        let monthlyAmount = 0;
+        let yearlyAmount = 0;
+
         if (contract.cycle === 'monthly') {
-            totalMonthly += amount;
-            totalYearly += amount * 12;
+            monthlyAmount = amount;
+            yearlyAmount = amount * 12;
         } else if (contract.cycle === 'yearly') {
-            totalYearly += amount;
-            totalMonthly += Math.round(amount / 12);
+            yearlyAmount = amount;
+            monthlyAmount = Math.round(amount / 12);
         } else {
-            totalYearly += amount;
+            // One-time payment (not recurring) - exclude from subscription totals?
+            // Or treat as yearly/monthly? Usually exclude or treat as 0 for subscription.
+            // For now, let's exclude onetime from "Monthly Subscription" check.
+            monthlyAmount = 0;
+            yearlyAmount = 0;
+        }
+
+        if (isUSD) {
+            totalMonthlyUSD += monthlyAmount;
+            totalYearlyUSD += yearlyAmount;
+        } else {
+            totalMonthlyKRW += monthlyAmount;
+            totalYearlyKRW += yearlyAmount;
         }
     });
+
+    // Grand Totals (Converted to KRW)
+    const totalMonthly = totalMonthlyKRW + (totalMonthlyUSD * EXCHANGE_RATE);
+    const totalYearly = totalYearlyKRW + (totalYearlyUSD * EXCHANGE_RATE);
 
     return NextResponse.json({
         urgent,
@@ -55,6 +81,10 @@ export async function GET() {
         normal,
         totalMonthly,
         totalYearly,
+        totalMonthlyKRW,
+        totalMonthlyUSD,
+        totalYearlyKRW,
+        totalYearlyUSD,
         totalContracts: contracts?.length || 0,
     });
 }
