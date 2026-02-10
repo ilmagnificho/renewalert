@@ -44,7 +44,7 @@ export default function LandingPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
             </div>
-            <span className="text-lg font-extrabold tracking-[0.01em] text-white">Renew<span className="text-blue-300">Alert</span></span>
+            <span className="text-lg font-extrabold tracking-[0.01em] text-white">Renew<span className="text-red-400">Alert</span></span>
           </Link>
           <div className="flex items-center gap-6">
             <Link
@@ -81,7 +81,7 @@ export default function LandingPage() {
               href="/login?auto_demo=true"
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-black font-black px-10 py-5 rounded-2xl hover:bg-zinc-200 transition-all duration-300 text-xl shadow-2xl shadow-white/10"
             >
-              자동 결제 전에 결정하기
+              불필요한 비용 절감하기
             </Link>
           </div>
           <p className="mt-8 text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">
@@ -168,7 +168,7 @@ export default function LandingPage() {
               href="/login"
               className="inline-flex items-center justify-center gap-2 bg-white text-black font-black px-12 py-5 rounded-2xl hover:bg-zinc-200 transition-all duration-300 text-xl"
             >
-              우리 팀 결정 타이밍 관리 시작하기
+              지금 비용 누수 점검하기
             </Link>
           </div>
         </div>

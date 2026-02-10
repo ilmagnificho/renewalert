@@ -42,7 +42,7 @@ export function Sidebar() {
                         </div>
                         <div className="flex flex-col leading-tight">
                             <span className="text-xl font-black tracking-[0.01em] text-white">
-                                Renew<span className="text-blue-400">Alert</span>
+                                Renew<span className="text-red-400">Alert</span>
                             </span>
                             <span className="text-[10px] text-zinc-400 font-semibold tracking-wide">반복 지출 통제 시스템</span>
                         </div>
@@ -95,7 +95,7 @@ export function Sidebar() {
                     <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
                         <span className="text-primary-foreground font-bold text-lg">R</span>
                     </div>
-                    <span className="font-bold text-xl text-foreground">RenewAlert</span>
+                    <span className="font-bold text-xl text-foreground">Renew<span className="text-red-400">Alert</span></span>
                 </div>
                 <div className="flex items-center gap-2">
                     <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsMobileMenuOpen(!isMobileMenuOpen); }} className="text-muted-foreground p-2 hover:bg-accent rounded-lg transition-colors">

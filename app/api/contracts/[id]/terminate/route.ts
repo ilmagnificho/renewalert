@@ -1,6 +1,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
+type ContractUpdatePayload = {
+    status: 'terminated';
+    saved_amount?: number;
+    decision_status?: 'terminated';
+    decision_date?: string;
+};
+
 export async function POST(
     request: Request,
     { params }: { params: Promise<{ id: string }> }
@@ -16,7 +23,6 @@ export async function POST(
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 1. Fetch contract info to check currency
     const { data: contract, error: fetchError } = await supabase
         .from('contracts')
         .select('*')
@@ -28,44 +34,48 @@ export async function POST(
         return NextResponse.json({ error: 'Contract not found' }, { status: 404 });
     }
 
-    // 2. Update contract status and saved amount
-    const { data: updatedContract, error: updateError } = await supabase
-        .from('contracts')
-        .update({
+    let updatedContract: Record<string, unknown> | null = null;
+
+    const updateVariants: ContractUpdatePayload[] = [
+        {
             status: 'terminated',
             saved_amount: savedAmount,
             decision_status: 'terminated',
             decision_date: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .eq('user_id', user.id)
-        .select()
-        .single();
+        },
+        {
+            status: 'terminated',
+            saved_amount: savedAmount,
+        },
+        {
+            status: 'terminated',
+        },
+    ];
 
-    if (updateError && updateError.message.includes('decision_status')) {
-        const fallback = await supabase
+    let lastUpdateError = '';
+
+    for (const payload of updateVariants) {
+        const { data, error } = await supabase
             .from('contracts')
-            .update({
-                status: 'terminated',
-                saved_amount: savedAmount,
-            })
+            .update(payload)
             .eq('id', id)
             .eq('user_id', user.id)
             .select()
             .single();
 
-        if (fallback.error) {
-            return NextResponse.json({ error: fallback.error.message }, { status: 500 });
+        if (!error) {
+            updatedContract = data;
+            break;
         }
 
-        return NextResponse.json(fallback.data);
+        lastUpdateError = error.message;
     }
 
-    if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 500 });
+    if (!updatedContract) {
+        return NextResponse.json({ error: lastUpdateError || 'Failed to terminate contract' }, { status: 500 });
     }
 
-    // 3. Atomically update user's total saved amount (Convert to KRW if needed)
+    // Atomically update user's total saved amount (Convert to KRW if needed)
     let savedKRW = savedAmount;
     if (contract.currency === 'USD') {
         const { getUSDToKRWRate } = await import('@/lib/exchange-rate');
@@ -79,7 +89,6 @@ export async function POST(
     });
 
     if (userUpdateError) {
-        // Fallback to manual update if RPC doesn't exist yet
         const { data: userData } = await supabase
             .from('users')
             .select('id, total_saved_krw')
