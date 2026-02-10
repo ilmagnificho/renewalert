@@ -24,7 +24,7 @@ export function Sidebar() {
         await supabase.auth.signOut();
         // Clear guest mode cookie
         document.cookie = "guest_mode=; path=/; max-age=0";
-        router.push('/login');
+        router.push('/');
         router.refresh();
     };
 
@@ -32,7 +32,7 @@ export function Sidebar() {
         <>
             {/* Desktop Sidebar */}
             <aside className="hidden md:flex w-64 flex-col fixed inset-y-0 left-0 bg-background border-r border-border z-50">
-                <div className="h-16 flex items-center justify-between px-6 border-b border-zinc-900/50">
+                <Link href="/" className="h-16 flex items-center justify-between px-6 border-b border-zinc-900/50 hover:bg-zinc-900/10 transition-colors">
                     <div className="flex items-center gap-2.5 group cursor-pointer">
                         <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-2xl group-hover:scale-105 transition-transform duration-200">
                             <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -41,7 +41,7 @@ export function Sidebar() {
                         </div>
                         <span className="text-lg font-bold tracking-tight text-white">갱신알림</span>
                     </div>
-                </div>
+                </Link>
 
                 <div className="flex-1 flex flex-col justify-between py-6 px-4">
                     <nav className="space-y-1">
@@ -84,21 +84,21 @@ export function Sidebar() {
             </aside>
 
             {/* Mobile Header & Nav */}
-            <div className="md:hidden fixed top-0 w-full z-40 bg-background/80 backdrop-blur-md border-b border-border h-16 px-4 flex items-center justify-between">
-                <Link href="/dashboard" className="flex items-center gap-2 px-2 hover:opacity-80 transition-opacity">
+            <Link href="/" className="md:hidden fixed top-0 w-full z-40 bg-background/80 backdrop-blur-md border-b border-border h-16 px-4 flex items-center justify-between">
+                <div className="flex items-center gap-2 group cursor-pointer">
                     <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
                         <span className="text-primary-foreground font-bold text-lg">R</span>
                     </div>
                     <span className="font-bold text-xl text-foreground">RenewAlert</span>
-                </Link>
+                </div>
                 <div className="flex items-center gap-2">
-                    <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-muted-foreground">
+                    <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsMobileMenuOpen(!isMobileMenuOpen); }} className="text-muted-foreground p-2 hover:bg-accent rounded-lg transition-colors">
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
                         </svg>
                     </button>
                 </div>
-            </div>
+            </Link>
 
             {/* Mobile Menu Dropdown */}
             {isMobileMenuOpen && (
