@@ -36,7 +36,6 @@ export default function ContractsPage() {
         if (!user) {
             // Guest Mode (Mock Data) 
             const mockData: Contract[] = [
-                // ... (existing mock data)
                 {
                     id: 'mock-1',
                     name: 'Adobe Creative Cloud',
@@ -49,6 +48,7 @@ export default function ContractsPage() {
                     memo: '디자인 팀 라이선스',
                     auto_renew: true,
                     notice_days: 7,
+                    saved_amount: null,
                     user_id: 'mock',
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
@@ -65,6 +65,7 @@ export default function ContractsPage() {
                     memo: '메인 서버 호스팅',
                     auto_renew: true,
                     notice_days: 30,
+                    saved_amount: null,
                     user_id: 'mock',
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
@@ -81,6 +82,7 @@ export default function ContractsPage() {
                     memo: '본사 사무실',
                     auto_renew: false,
                     notice_days: 90,
+                    saved_amount: null,
                     user_id: 'mock',
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
@@ -97,6 +99,7 @@ export default function ContractsPage() {
                     memo: '법인 차량 3대',
                     auto_renew: true,
                     notice_days: 30,
+                    saved_amount: null,
                     user_id: 'mock',
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
@@ -113,6 +116,7 @@ export default function ContractsPage() {
                     memo: '전사 메신저',
                     auto_renew: true,
                     notice_days: 30,
+                    saved_amount: null,
                     user_id: 'mock',
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
@@ -137,7 +141,8 @@ export default function ContractsPage() {
                 totalYearlyKRW: 49152000,
                 totalYearlyUSD: 240,
                 totalContracts: 5,
-                exchangeRate: 1400
+                exchangeRate: 1400,
+                totalSavedKRW: 8420000
             });
             setIsLoading(false);
             return;
