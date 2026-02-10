@@ -32,10 +32,7 @@ export const metadata: Metadata = {
     icon: '/icon.svg',
     apple: '/icon.svg',
   },
-  icons: {
-    icon: '/icon.svg',
-    apple: '/icon.svg',
-  },
+
 };
 
 export const viewport = {
