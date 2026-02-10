@@ -1,120 +1,117 @@
-'use client';
+import * as React from "react"
+import { cn } from "@/lib/utils"
 
-import { cn } from '@/lib/utils';
-import { InputHTMLAttributes, forwardRef, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
-
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps
+    extends React.InputHTMLAttributes<HTMLInputElement> {
     label?: string;
     error?: string;
     helperText?: string;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(
-    ({ className, label, error, helperText, id, ...props }, ref) => {
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+    ({ className, type, label, error, helperText, ...props }, ref) => {
         return (
-            <div className="flex flex-col gap-1.5">
+            <div className="w-full space-y-1.5">
                 {label && (
-                    <label htmlFor={id} className="text-sm font-medium text-text-secondary">
+                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-300">
                         {label}
                     </label>
                 )}
                 <input
-                    ref={ref}
-                    id={id}
+                    type={type}
                     className={cn(
-                        'h-10 w-full rounded-lg bg-dark-card border border-dark-border px-3 text-sm text-text-primary placeholder:text-text-tertiary transition-colors duration-200',
-                        'focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary',
-                        'disabled:opacity-50 disabled:cursor-not-allowed',
-                        error && 'border-danger focus:border-danger focus:ring-danger',
+                        "flex h-11 w-full rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200",
+                        error && "border-red-500 focus-visible:ring-red-500",
                         className
                     )}
+                    ref={ref}
                     {...props}
                 />
-                {error && <p className="text-xs text-danger">{error}</p>}
-                {helperText && !error && <p className="text-xs text-text-tertiary">{helperText}</p>}
+                {error && (
+                    <p className="text-xs text-red-500 animate-in slide-in-from-top-1">{error}</p>
+                )}
+                {helperText && !error && (
+                    <p className="text-xs text-slate-500">{helperText}</p>
+                )}
             </div>
-        );
+        )
     }
-);
+)
+Input.displayName = "Input"
 
-Input.displayName = 'Input';
-
-// Select
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
+export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
     label?: string;
-    error?: string;
     options: { value: string; label: string }[];
+    error?: string;
 }
 
-const Select = forwardRef<HTMLSelectElement, SelectProps>(
-    ({ className, label, error, options, id, ...props }, ref) => {
+const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
+    ({ className, label, options, error, ...props }, ref) => {
         return (
-            <div className="flex flex-col gap-1.5">
+            <div className="w-full space-y-1.5">
                 {label && (
-                    <label htmlFor={id} className="text-sm font-medium text-text-secondary">
+                    <label className="text-sm font-medium leading-none text-slate-300">
                         {label}
                     </label>
                 )}
-                <select
-                    ref={ref}
-                    id={id}
-                    className={cn(
-                        'h-10 w-full rounded-lg bg-dark-card border border-dark-border px-3 text-sm text-text-primary transition-colors duration-200 appearance-none cursor-pointer',
-                        'focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary',
-                        'disabled:opacity-50 disabled:cursor-not-allowed',
-                        error && 'border-danger focus:border-danger focus:ring-danger',
-                        className
-                    )}
-                    {...props}
-                >
-                    {options.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                        </option>
-                    ))}
-                </select>
-                {error && <p className="text-xs text-danger">{error}</p>}
+                <div className="relative">
+                    <select
+                        className={cn(
+                            "flex h-11 w-full appearance-none rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200",
+                            error && "border-red-500",
+                            className
+                        )}
+                        ref={ref}
+                        {...props}
+                    >
+                        {options.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
+                    <div className="absolute right-3 top-3 pointer-events-none text-slate-400">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+                </div>
+                {error && <p className="text-xs text-red-500">{error}</p>}
             </div>
-        );
+        )
     }
-);
+)
+Select.displayName = "Select"
 
-Select.displayName = 'Select';
-
-// Textarea
-interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+export interface TextareaProps
+    extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
     label?: string;
     error?: string;
 }
 
-const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-    ({ className, label, error, id, ...props }, ref) => {
+const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+    ({ className, label, error, ...props }, ref) => {
         return (
-            <div className="flex flex-col gap-1.5">
+            <div className="w-full space-y-1.5">
                 {label && (
-                    <label htmlFor={id} className="text-sm font-medium text-text-secondary">
+                    <label className="text-sm font-medium leading-none text-slate-300">
                         {label}
                     </label>
                 )}
                 <textarea
-                    ref={ref}
-                    id={id}
                     className={cn(
-                        'w-full rounded-lg bg-dark-card border border-dark-border p-3 text-sm text-text-primary placeholder:text-text-tertiary transition-colors duration-200 resize-none min-h-[80px]',
-                        'focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary',
-                        'disabled:opacity-50 disabled:cursor-not-allowed',
-                        error && 'border-danger focus:border-danger focus:ring-danger',
+                        "flex min-h-[80px] w-full rounded-lg border border-slate-700 bg-slate-800/50 px-3 py-2 text-sm ring-offset-background placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200 resize-y",
+                        error && "border-red-500",
                         className
                     )}
+                    ref={ref}
                     {...props}
                 />
-                {error && <p className="text-xs text-danger">{error}</p>}
+                {error && <p className="text-xs text-red-500">{error}</p>}
             </div>
-        );
+        )
     }
-);
+)
+Textarea.displayName = "Textarea"
 
-Textarea.displayName = 'Textarea';
-
-export { Input, Select, Textarea };
-export type { InputProps, SelectProps, TextareaProps };
+export { Input, Select, Textarea }

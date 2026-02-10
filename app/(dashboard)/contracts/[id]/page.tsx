@@ -6,12 +6,14 @@ import { Contract, CONTRACT_TYPE_LABELS, PAYMENT_CYCLE_LABELS, CONTRACT_STATUS_L
 import { ContractForm } from '@/components/contracts/contract-form';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmModal } from '@/components/ui/modal';
 import { useToast } from '@/components/ui/toast';
 import { formatCurrency, getDaysUntil, getUrgencyLevel, formatDDay, formatDate } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
+
+export const dynamic = 'force-dynamic';
 
 export default function ContractDetailPage() {
     const params = useParams();
@@ -87,24 +89,26 @@ export default function ContractDetailPage() {
     };
 
     if (isLoading) {
-        return <div className="max-w-2xl mx-auto"><div className="h-64 bg-dark-card border border-dark-border rounded-xl animate-pulse" /></div>;
+        return <div className="max-w-2xl mx-auto"><div className="h-64 bg-slate-800 rounded-xl animate-pulse" /></div>;
     }
 
     if (!contract) {
         return (
-            <div className="text-center py-16">
-                <h2 className="text-xl font-semibold mb-2">계약을 찾을 수 없습니다</h2>
-                <Button variant="ghost" onClick={() => router.push('/contracts')}>목록으로 돌아가기</Button>
+            <div className="text-center py-20">
+                <h2 className="text-xl font-semibold mb-2 text-slate-200">계약을 찾을 수 없습니다</h2>
+                <Button variant="ghost" onClick={() => router.push('/contracts')} className="text-slate-400 hover:text-white">목록으로 돌아가기</Button>
             </div>
         );
     }
 
     if (isEditing) {
         return (
-            <div className="max-w-2xl mx-auto space-y-6">
+            <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
                 <div className="flex items-center justify-between">
-                    <h1 className="text-2xl font-bold">계약 수정</h1>
-                    <Button variant="ghost" onClick={() => setIsEditing(false)}>취소</Button>
+                    <h1 className="text-2xl font-bold text-white">계약 수정</h1>
+                    <Button variant="ghost" onClick={() => setIsEditing(false)} className="text-slate-400 hover:text-white">
+                        취소
+                    </Button>
                 </div>
                 <ContractForm contract={contract} mode="edit" />
             </div>
@@ -112,108 +116,107 @@ export default function ContractDetailPage() {
     }
 
     const daysUntil = getDaysUntil(contract.expires_at);
-    const urgency = contract.status === 'active' ? getUrgencyLevel(daysUntil) : 'default' as const;
 
     return (
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-3xl mx-auto space-y-8 animate-fade-in">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <button
                         onClick={() => router.push('/contracts')}
-                        className="text-text-secondary hover:text-text-primary text-sm mb-2 flex items-center gap-1 transition-colors cursor-pointer"
+                        className="text-slate-500 hover:text-slate-300 text-sm mb-2 flex items-center gap-1 transition-colors cursor-pointer"
                     >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                         </svg>
-                        계약 목록
+                        목록으로
                     </button>
-                    <h1 className="text-2xl font-bold">{contract.name}</h1>
+                    <div className="flex items-center gap-3">
+                        <h1 className="text-3xl font-bold text-white">{contract.name}</h1>
+                        {contract.status === 'active' && daysUntil <= 30 && (
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${daysUntil <= 7
+                                    ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                    : 'bg-orange-500/10 text-orange-500 border-orange-500/20'
+                                }`}>
+                                {daysUntil <= 0 ? '만기' : `D-${daysUntil}`}
+                            </span>
+                        )}
+                    </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>수정</Button>
-                    <Button variant="danger" size="sm" onClick={() => setShowDeleteModal(true)}>삭제</Button>
+                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="border-slate-700 hover:bg-slate-800 text-slate-300">
+                        수정
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setShowDeleteModal(true)} className="text-red-400 hover:bg-red-500/10 hover:text-red-300">
+                        삭제
+                    </Button>
                 </div>
             </div>
 
-            {/* Status Banner */}
-            {contract.status === 'active' && daysUntil <= 30 && (
-                <div className={`p-4 rounded-lg border ${daysUntil <= 7
-                        ? 'bg-danger-bg border-danger/20 text-danger'
-                        : 'bg-warning-bg border-warning/20 text-warning'
-                    }`}>
-                    <div className="flex items-center gap-2">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                        </svg>
-                        <span className="font-medium">
-                            {daysUntil <= 0
-                                ? '만기일이 지났습니다!'
-                                : `만기까지 ${daysUntil}일 남았습니다.`}
-                        </span>
-                    </div>
-                </div>
-            )}
-
             {/* Contract Details */}
-            <Card>
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <p className="text-xs text-text-tertiary mb-1">유형</p>
-                        <p className="text-sm font-medium">{CONTRACT_TYPE_LABELS[contract.type]}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-text-tertiary mb-1">상태</p>
-                        <Badge variant={urgency}>{CONTRACT_STATUS_LABELS[contract.status]}</Badge>
-                    </div>
-                    <div>
-                        <p className="text-xs text-text-tertiary mb-1">금액</p>
-                        <p className="text-sm font-mono font-medium">{formatCurrency(contract.amount, contract.currency)}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-text-tertiary mb-1">결제 주기</p>
-                        <p className="text-sm font-medium">{PAYMENT_CYCLE_LABELS[contract.cycle]}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-text-tertiary mb-1">만기일</p>
-                        <p className="text-sm font-medium">{formatDate(contract.expires_at)}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-text-tertiary mb-1">D-Day</p>
-                        <p className="text-sm font-medium">{contract.status === 'active' ? formatDDay(daysUntil) : '-'}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-text-tertiary mb-1">자동갱신</p>
-                        <p className="text-sm font-medium">{contract.auto_renew ? '예' : '아니오'}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-text-tertiary mb-1">해지 통보 기한</p>
-                        <p className="text-sm font-medium">{contract.notice_days}일 전</p>
-                    </div>
-                    {contract.memo && (
-                        <div className="col-span-2">
-                            <p className="text-xs text-text-tertiary mb-1">메모</p>
-                            <p className="text-sm text-text-secondary">{contract.memo}</p>
+            <Card className="border-slate-800 bg-slate-900/50">
+                <CardContent className="p-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+                        <div className="space-y-1">
+                            <p className="text-sm font-medium text-slate-500">계약 금액</p>
+                            <p className="text-2xl font-mono font-bold text-white tracking-tight">{formatCurrency(contract.amount, contract.currency)}</p>
+                            <p className="text-sm text-slate-500">{PAYMENT_CYCLE_LABELS[contract.cycle]} 결제</p>
                         </div>
-                    )}
-                </div>
+
+                        <div className="space-y-1">
+                            <p className="text-sm font-medium text-slate-500">만기일</p>
+                            <p className="text-2xl font-bold text-white tracking-tight">{formatDate(contract.expires_at)}</p>
+                            <p className="text-sm text-slate-500">
+                                {contract.auto_renew ? '🔄 자동갱신 설정됨' : '⏹ 자동갱신 없음'}
+                            </p>
+                        </div>
+
+                        <div className="border-t border-slate-800 col-span-1 md:col-span-2 my-2"></div>
+
+                        <div>
+                            <p className="text-sm font-medium text-slate-500 mb-1">유형</p>
+                            <p className="text-base font-medium text-slate-200">{CONTRACT_TYPE_LABELS[contract.type]}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-slate-500 mb-1">현재 상태</p>
+                            <p className="text-base font-medium text-slate-200">{CONTRACT_STATUS_LABELS[contract.status]}</p>
+                        </div>
+                        <div>
+                            <p className="text-sm font-medium text-slate-500 mb-1">해지 통보 기한</p>
+                            <p className="text-base font-medium text-slate-200">만기 {contract.notice_days}일 전까지</p>
+                        </div>
+
+                        {contract.memo && (
+                            <div className="col-span-1 md:col-span-2 bg-slate-950/50 p-4 rounded-lg border border-slate-800">
+                                <p className="text-xs font-medium text-slate-500 mb-2 uppercase tracking-wider">Memo</p>
+                                <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">{contract.memo}</p>
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
             </Card>
 
             {/* Actions */}
             {contract.status === 'active' && (
-                <div className="flex gap-3">
-                    <Button variant="secondary" className="flex-1" onClick={() => setShowRenewModal(true)}>
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        갱신 완료
-                    </Button>
-                    <Button variant="secondary" className="flex-1" onClick={() => setShowTerminateModal(true)}>
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                        해지 완료
-                    </Button>
+                <div className="flex flex-col sm:flex-row gap-4 p-6 bg-slate-900/30 border border-slate-800/50 rounded-xl">
+                    <div className="flex-1">
+                        <h3 className="text-base font-semibold text-white mb-1">계약 상태 변경</h3>
+                        <p className="text-sm text-slate-500">계약이 갱신되었거나 해지된 경우 상태를 변경하세요.</p>
+                    </div>
+                    <div className="flex gap-3">
+                        <Button variant="secondary" onClick={() => setShowRenewModal(true)} className="bg-green-600/10 text-green-500 hover:bg-green-600/20 border-green-600/20 hover:border-green-600/40">
+                            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            갱신 완료
+                        </Button>
+                        <Button variant="secondary" onClick={() => setShowTerminateModal(true)} className="bg-slate-800 text-slate-300 hover:bg-slate-700">
+                            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            해지 완료
+                        </Button>
+                    </div>
                 </div>
             )}
 
@@ -236,12 +239,12 @@ export default function ContractDetailPage() {
                 footer={
                     <>
                         <Button variant="ghost" onClick={() => setShowRenewModal(false)}>취소</Button>
-                        <Button onClick={handleRenew} isLoading={isProcessing} disabled={!nextExpiresAt}>확인</Button>
+                        <Button onClick={handleRenew} isLoading={isProcessing} disabled={!nextExpiresAt} className="bg-blue-600">확인</Button>
                     </>
                 }
             >
                 <div className="space-y-4">
-                    <p className="text-text-secondary text-sm">다음 만기일을 설정해주세요.</p>
+                    <p className="text-slate-400 text-sm">다음 만기일을 설정해주세요.</p>
                     <Input
                         id="nextExpiresAt"
                         label="다음 만기일"
@@ -249,6 +252,7 @@ export default function ContractDetailPage() {
                         value={nextExpiresAt}
                         onChange={(e) => setNextExpiresAt(e.target.value)}
                         required
+                        className="bg-slate-950 border-slate-700"
                     />
                 </div>
             </Modal>

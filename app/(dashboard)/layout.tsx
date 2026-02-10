@@ -1,5 +1,4 @@
 import { Sidebar } from '@/components/layout/sidebar';
-import { Header } from '@/components/layout/header';
 import { ToastProvider } from '@/components/ui/toast';
 
 export const dynamic = 'force-dynamic';
@@ -10,16 +9,15 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     return (
-        <ToastProvider>
-            <div className="min-h-screen bg-dark-bg">
-                <Sidebar />
-                <div className="lg:ml-60">
-                    <Header />
-                    <main className="p-4 lg:p-6 pb-20 lg:pb-6">
+        <div className="flex min-h-screen bg-slate-950 text-slate-100">
+            <Sidebar />
+            <div className="flex-1 flex flex-col md:pl-64 transition-all duration-300">
+                <main className="flex-1 p-6 md:p-8 pt-20 md:pt-8 max-w-6xl mx-auto w-full">
+                    <ToastProvider>
                         {children}
-                    </main>
-                </div>
+                    </ToastProvider>
+                </main>
             </div>
-        </ToastProvider>
+        </div>
     );
 }
