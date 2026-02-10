@@ -59,8 +59,9 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
             }
 
             addToast('success', mode === 'create' ? '계약이 등록되었습니다.' : '계약이 수정되었습니다.');
-            router.push('/contracts');
+            // 데이터 갱신 보장
             router.refresh();
+            router.push('/contracts');
         } catch {
             addToast('error', '네트워크 오류가 발생했습니다.');
         } finally {
