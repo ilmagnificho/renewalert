@@ -158,6 +158,10 @@ export default function DashboardPage() {
 
     const dangerContract = alertWindowContracts.find((contract) => getUrgencyLevel(getDaysUntil(contract.expires_at)) === 'danger');
 
+    const handleDecisionComplete = (contractId: string) => {
+        setContracts((prev) => prev.filter((contract) => contract.id !== contractId));
+    };
+
     if (isLoading || isRateLoading) {
         return (
             <div className="space-y-6 animate-pulse max-w-7xl mx-auto">
@@ -235,6 +239,7 @@ export default function DashboardPage() {
                     <CancellationExecutionCard
                         contract={dangerContract}
                         exchangeRate={exchangeRate}
+                        onDecisionComplete={handleDecisionComplete}
                     />
                 </div>
             )}

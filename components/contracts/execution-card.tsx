@@ -11,9 +11,10 @@ interface CancellationExecutionCardProps {
     contract: Contract;
     guide?: CancellationGuide | null;
     exchangeRate?: number;
+    onDecisionComplete?: (contractId: string) => void;
 }
 
-export function CancellationExecutionCard({ contract, guide, exchangeRate }: CancellationExecutionCardProps) {
+export function CancellationExecutionCard({ contract, guide, exchangeRate, onDecisionComplete }: CancellationExecutionCardProps) {
     const router = useRouter();
     const { addToast } = useToast();
     const [showKeepModal, setShowKeepModal] = useState(false);
@@ -33,6 +34,7 @@ export function CancellationExecutionCard({ contract, guide, exchangeRate }: Can
             if (res.ok) {
                 addToast('success', '유지 결정이 기록되었습니다.');
                 setShowKeepModal(false);
+                onDecisionComplete?.(contract.id);
                 router.refresh();
             } else {
                 const error = await res.json();
