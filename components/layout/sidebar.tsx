@@ -32,14 +32,14 @@ export function Sidebar() {
         <>
             {/* Desktop Sidebar */}
             <aside className="hidden md:flex w-64 flex-col fixed inset-y-0 left-0 bg-background border-r border-border z-50">
-                <div className="h-16 flex items-center justify-between px-6 border-b border-border">
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/30">
-                            <svg className="w-5 h-5 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="h-16 flex items-center justify-between px-6 border-b border-zinc-900/50">
+                    <div className="flex items-center gap-2.5 group cursor-pointer">
+                        <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-2xl group-hover:scale-105 transition-transform duration-200">
+                            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
                         </div>
-                        <span className="text-xl font-bold tracking-tight text-foreground">갱신알림</span>
+                        <span className="text-lg font-bold tracking-tight text-white">갱신알림</span>
                     </div>
                 </div>
 

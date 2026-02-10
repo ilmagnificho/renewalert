@@ -29,8 +29,8 @@ export const metadata: Metadata = {
     description: 'SaaS, 임대료, 보험료 등 놓치기 쉬운 갱신 일정을 관리해드립니다.',
   },
   icons: {
-    icon: '/icon.svg',
-    apple: '/icon.svg',
+    icon: '/favicon.svg',
+    apple: '/favicon.svg',
   },
 
 };
