@@ -69,7 +69,7 @@ export default function ContractDetailPage() {
             addToast('success', '계약이 삭제되었습니다.');
             router.push('/contracts');
         } else {
-            addToast('error', '삭제에 실패했습니다.');
+            addToast('error', '삭제 처리 중 오류가 발생했습니다.');
         }
         setIsDeleting(false);
         setShowDeleteModal(false);
@@ -87,7 +87,7 @@ export default function ContractDetailPage() {
             addToast('success', '갱신 완료 처리되었습니다.');
             fetchContract();
         } else {
-            addToast('error', '처리에 실패했습니다.');
+            addToast('error', '갱신 처리에 실패했습니다.');
         }
         setIsProcessing(false);
         setShowRenewModal(false);
@@ -101,10 +101,10 @@ export default function ContractDetailPage() {
             body: JSON.stringify({ saved_amount: Number(savedAmount) }),
         });
         if (res.ok) {
-            addToast('success', '해지 완료 처리되었습니다. 절감된 비용이 기록되었습니다.');
+            addToast('success', '해지 완료! 절감된 비용이 기록되었습니다.');
             fetchContract();
         } else {
-            addToast('error', '처리에 실패했습니다.');
+            addToast('error', '해지 처리에 실패했습니다. 잠시 후 다시 시도해주세요.');
         }
         setIsProcessing(false);
         setShowTerminateModal(false);
@@ -259,8 +259,11 @@ export default function ContractDetailPage() {
                 onClose={() => setShowDeleteModal(false)}
                 onConfirm={handleDelete}
                 title="계약 삭제"
-                message={`"${contract.name}" 계약을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`}
-                confirmText="삭제"
+                message={`"${contract.name}" 계약을 정말 삭제하시겠습니까?
+                
+주의: 해지 완료된 계약이라도 '삭제'하면 절감 비용 통계에서 제외됩니다.
+서비스를 해지하셨다면 삭제 대신 [해지 완료] 버튼을 눌러주세요.`}
+                confirmText="삭제 (통계 제외)"
                 isLoading={isDeleting}
             />
 

@@ -102,6 +102,8 @@ export async function POST(
     });
 
     if (userUpdateError) {
+        console.warn('RPC increment_total_saved failed or missing, falling back to manual update:', userUpdateError.message);
+
         const { data: userData } = await supabase
             .from('users')
             .select('id, total_saved_krw')
@@ -116,6 +118,7 @@ export async function POST(
                 .eq('id', user.id);
 
             if (fallbackUpdateError) {
+                console.error('Failed to manually update user savings:', fallbackUpdateError);
                 return NextResponse.json({ error: fallbackUpdateError.message }, { status: 500 });
             }
         } else {
@@ -128,6 +131,7 @@ export async function POST(
                 }, { onConflict: 'id' });
 
             if (upsertError) {
+                console.error('Failed to upsert user savings:', upsertError);
                 return NextResponse.json({ error: upsertError.message }, { status: 500 });
             }
         }
