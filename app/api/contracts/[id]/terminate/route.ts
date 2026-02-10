@@ -7,7 +7,9 @@ export async function POST(
 ) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const { saved_amount } = await request.json();
+    const body = await request.json().catch(() => ({}));
+    const parsedSavedAmount = Number(body?.saved_amount);
+    const savedAmount = Number.isFinite(parsedSavedAmount) && parsedSavedAmount >= 0 ? parsedSavedAmount : 0;
     const { id } = await params;
 
     if (!user) {
@@ -31,19 +33,40 @@ export async function POST(
         .from('contracts')
         .update({
             status: 'terminated',
-            saved_amount: saved_amount
+            saved_amount: savedAmount,
+            decision_status: 'terminated',
+            decision_date: new Date().toISOString(),
         })
         .eq('id', id)
         .eq('user_id', user.id)
         .select()
         .single();
 
+    if (updateError && updateError.message.includes('decision_status')) {
+        const fallback = await supabase
+            .from('contracts')
+            .update({
+                status: 'terminated',
+                saved_amount: savedAmount,
+            })
+            .eq('id', id)
+            .eq('user_id', user.id)
+            .select()
+            .single();
+
+        if (fallback.error) {
+            return NextResponse.json({ error: fallback.error.message }, { status: 500 });
+        }
+
+        return NextResponse.json(fallback.data);
+    }
+
     if (updateError) {
         return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
     // 3. Atomically update user's total saved amount (Convert to KRW if needed)
-    let savedKRW = Number(saved_amount);
+    let savedKRW = savedAmount;
     if (contract.currency === 'USD') {
         const { getUSDToKRWRate } = await import('@/lib/exchange-rate');
         const rate = await getUSDToKRWRate();

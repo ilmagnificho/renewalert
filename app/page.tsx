@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ShockTrigger } from '@/components/dashboard/shock-trigger';
 
 export default function LandingPage() {
@@ -31,7 +31,7 @@ export default function LandingPage() {
       {/* Financial Exposure Line */}
       <div className="relative z-[60] bg-zinc-900/80 backdrop-blur-md border-b border-white/5 py-2.5 px-6 text-center">
         <p className="text-[10px] sm:text-xs font-bold tracking-tight text-zinc-400">
-          실수로 갱신된 협업 도구 1년치 요금은 단순한 '실수'가 아닌 확정된 영업 이익의 손실입니다.
+          실수로 갱신된 협업 도구 1년치 요금은 단순한 &apos;실수&apos;가 아닌 확정된 영업 이익의 손실입니다.
         </p>
       </div>
 
@@ -69,20 +69,20 @@ export default function LandingPage() {
           <div className="inline-flex items-center gap-2 bg-zinc-900/50 border border-zinc-800 text-zinc-500 text-[10px] uppercase tracking-[0.2em] font-black px-4 py-1.5 rounded-full mb-10 backdrop-blur-md">
             <span>의사결정 타이밍 + 비용 손실 방지</span>
           </div>
-          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-[1.05] mb-10 text-white animate-fade-in-up">
-            자동 갱신 전에<br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-zinc-200 to-zinc-600">결정 타이밍을 잡으세요</span>
+          <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-[1.05] mb-10 text-white animate-fade-in-up drop-shadow-[0_0_20px_rgba(251,146,60,0.15)]">
+            자동 갱신 결제일 전에<br />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-300 via-orange-200 to-amber-300">해지·유지 결정을 끝내세요</span>
           </h1>
           <p className="text-lg sm:text-2xl text-zinc-500 max-w-3xl mx-auto mb-12 leading-relaxed px-4 font-medium">
-            RenewAlert은 단순한 관리가 아닌 '방어'를 위한 도구입니다.<br className="hidden md:block" />
-            무의미한 고정 지출이 영업 이익을 갉아먹기 전에 의사결정 시점을 알려드립니다.
+            RenewAlert은 반복 지출을 통제하는 실행 도구입니다.<br className="hidden md:block" />
+            자동 결제가 확정되기 전에 해지·유지 결정을 끝낼 시간을 확보해드립니다.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link
               href="/login?auto_demo=true"
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-black font-black px-10 py-5 rounded-2xl hover:bg-zinc-200 transition-all duration-300 text-xl shadow-2xl shadow-white/10"
             >
-              우리 팀 결정 타이밍 관리 시작하기
+              자동 결제 전에 결정하기
             </Link>
           </div>
           <p className="mt-8 text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">
@@ -101,21 +101,21 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto p-12 bg-zinc-950 border border-white/5 rounded-[3rem] shadow-3xl">
           <div className="mb-16">
             <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 tracking-tight">반복 지출 규모를 확인하세요</h2>
-            <p className="text-zinc-500 font-medium">팀 규모와 도구 수를 입력하면 예상 구독 비용이 바로 계산됩니다.</p>
+            <p className="text-zinc-500 font-medium">조직 인원과 반복 비용 건수를 입력하면 예상 지출이 바로 계산됩니다.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-16 text-left">
             <div className="space-y-4">
               <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">조직 규모 (인원)</label>
               <input
-                type="range" min="1" max="100" value={employees}
+                type="range" min="1" max="50" value={employees}
                 onChange={(e) => setEmployees(parseInt(e.target.value))}
                 className="w-full accent-white h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
               />
               <div className="text-2xl font-black text-white">{employees}명</div>
             </div>
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">사용 중인 SaaS 개수</label>
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">구독 중인 반복 비용 건수</label>
               <input
                 type="range" min="1" max="50" value={tools}
                 onChange={(e) => setTools(parseInt(e.target.value))}
@@ -147,7 +147,7 @@ export default function LandingPage() {
                 자동 갱신 전에 점검하면 불필요한 지출을 줄일 수 있습니다.
               </p>
               <div className="text-zinc-600 text-[10px] font-mono mt-4">
-                예: {employees}명 × {tools}개 × ₩{spend.toLocaleString()} → 약 ₩{yearlySpend.toLocaleString()} / 연
+                예: {employees}명 × {tools}건 × ₩{spend.toLocaleString()} → 약 ₩{yearlySpend.toLocaleString()} / 연
               </div>
             </div>
 
@@ -186,7 +186,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-16 text-left">
             <div className="space-y-6">
               <div className="text-2xl font-black text-zinc-200">의사결정 리드타임 확보</div>
-              <p className="text-zinc-500 leading-relaxed text-sm font-medium">해지 사유 분석과 협상, 대안 도구의 도입을 위해 충분한 '결정 가능 기간'을 미리 확보해드립니다.</p>
+              <p className="text-zinc-500 leading-relaxed text-sm font-medium">해지 사유 분석과 협상, 대안 도구의 도입을 위해 충분한 &apos;결정 가능 기간&apos;을 미리 확보해드립니다.</p>
             </div>
             <div className="space-y-6">
               <div className="text-2xl font-black text-zinc-200">해지 실행 인텔리전스</div>

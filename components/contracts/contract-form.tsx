@@ -96,15 +96,37 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
                             <label className="text-sm font-medium text-muted-foreground">✨ AI / 인기 서비스 간편 입력</label>
                             <div className="flex flex-wrap gap-2">
                                 {[
-                                    { name: 'ChatGPT', type: 'saas', tier: 'Plus', amount: 20, currency: 'USD', cycle: 'monthly', notice_days: 1 },
-                                    { name: 'Claude', type: 'saas', tier: 'Pro', amount: 20, currency: 'USD', cycle: 'monthly', notice_days: 1 },
-                                    { name: 'Gemini', type: 'saas', tier: 'Advanced', amount: 29000, currency: 'KRW', cycle: 'monthly', notice_days: 1 },
-                                    { name: 'Manus', type: 'saas', tier: 'Pro', amount: 30000, currency: 'KRW', cycle: 'monthly', notice_days: 1 },
-                                    { name: 'Notion', type: 'saas', tier: 'Plus', amount: 8, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'ChatGPT Pro', type: 'saas', tier: 'Pro', amount: 200, currency: 'USD', cycle: 'monthly', notice_days: 1 },
+                                    { name: 'Claude Max', type: 'saas', tier: 'Max', amount: 200, currency: 'USD', cycle: 'monthly', notice_days: 1 },
+                                    { name: 'Gemini Pro', type: 'saas', tier: 'Pro', amount: 29000, currency: 'KRW', cycle: 'monthly', notice_days: 1 },
+                                    { name: 'Perplexity Pro', type: 'saas', tier: 'Pro', amount: 20, currency: 'USD', cycle: 'monthly', notice_days: 1 },
+                                    { name: 'Midjourney', type: 'saas', tier: 'Standard', amount: 30, currency: 'USD', cycle: 'monthly', notice_days: 1 },
+                                    { name: 'Runway', type: 'saas', tier: 'Standard', amount: 15, currency: 'USD', cycle: 'monthly', notice_days: 1 },
+                                    { name: 'Cursor', type: 'saas', tier: 'Pro', amount: 20, currency: 'USD', cycle: 'monthly', notice_days: 1 },
+                                    { name: 'GitHub Copilot', type: 'saas', tier: 'Business', amount: 19, currency: 'USD', cycle: 'monthly', notice_days: 1 },
+                                    { name: 'Notion', type: 'saas', tier: 'Plus', amount: 12, currency: 'USD', cycle: 'monthly', notice_days: 30 },
                                     { name: 'Slack', type: 'saas', tier: 'Pro', amount: 8.75, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Figma', type: 'saas', tier: 'Professional', amount: 15, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Canva', type: 'saas', tier: 'Teams', amount: 15, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Zoom', type: 'saas', tier: 'Pro', amount: 15.99, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Google Workspace', type: 'saas', tier: 'Business Standard', amount: 14.4, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Microsoft 365', type: 'saas', tier: 'Business Standard', amount: 12.5, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Asana', type: 'saas', tier: 'Starter', amount: 10.99, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Trello', type: 'saas', tier: 'Premium', amount: 10, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Jira', type: 'saas', tier: 'Standard', amount: 8.15, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Confluence', type: 'saas', tier: 'Standard', amount: 5.16, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Linear', type: 'saas', tier: 'Standard', amount: 10, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Airtable', type: 'saas', tier: 'Team', amount: 20, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Zapier', type: 'saas', tier: 'Professional', amount: 29.99, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Make', type: 'saas', tier: 'Core', amount: 10.59, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'HubSpot', type: 'saas', tier: 'Starter', amount: 20, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Salesforce', type: 'saas', tier: 'Starter', amount: 25, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Miro', type: 'saas', tier: 'Starter', amount: 8, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Loom', type: 'saas', tier: 'Business', amount: 15, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Dropbox', type: 'saas', tier: 'Standard', amount: 18, currency: 'USD', cycle: 'monthly', notice_days: 30 },
                                     { name: 'Adobe CC', type: 'saas', tier: 'All Apps', amount: 62000, currency: 'KRW', cycle: 'monthly', notice_days: 14 },
                                     { name: 'AWS', type: 'saas', tier: 'Usage', amount: 0, currency: 'USD', cycle: 'monthly', notice_days: 30 },
-                                ].map((preset) => (
+                                ].slice(0, 30).map((preset) => (
                                     <button
                                         key={preset.name}
                                         type="button"
