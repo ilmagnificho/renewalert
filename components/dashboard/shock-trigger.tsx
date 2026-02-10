@@ -1,6 +1,5 @@
 'use client';
 
-import { Contract } from '@/types';
 import { formatCurrency } from '@/lib/utils';
 
 interface ShockTriggerProps {
@@ -13,7 +12,7 @@ interface ShockTriggerProps {
     title?: string;
 }
 
-export function ShockTrigger({ contracts, title = "RenewAlert이 방금 발견한 갱신 예정 비용" }: ShockTriggerProps) {
+export function ShockTrigger({ contracts, title = "RenewAlert에서 방금 발견한 갱신 예정 비용" }: ShockTriggerProps) {
     if (!contracts || contracts.length === 0) return null;
 
     const totalAtRisk = contracts.reduce((acc, contract) => {

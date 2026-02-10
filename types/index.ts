@@ -1,6 +1,7 @@
 // Contract types
 export type ContractType = 'saas' | 'rent' | 'insurance' | 'other';
 export type ContractStatus = 'active' | 'renewed' | 'terminated';
+export type ContractDecisionStatus = 'kept' | 'terminated';
 export type PaymentCycle = 'monthly' | 'yearly' | 'onetime';
 export type NotificationType = '90d' | '30d' | '7d' | '1d';
 export type NotificationStatus = 'sent' | 'failed';
@@ -33,6 +34,8 @@ export interface Contract {
   memo: string | null;
   created_at: string;
   updated_at: string;
+  decision_status?: ContractDecisionStatus | null;
+  decision_date?: string | null;
   tier?: string;
   owner_name?: string;
 }
@@ -82,6 +85,7 @@ export interface DashboardSummary {
   totalYearlyUSD: number;
   totalContracts: number;
   exchangeRate: number;
+  exchangeRateSource?: 'api' | 'mock';
   totalSavedKRW: number;
 }
 

@@ -8,7 +8,7 @@ export default function SignupPage() {
             <div className="text-center">
                 <h2 className="text-3xl font-bold tracking-tight text-foreground">회원가입</h2>
                 <p className="mt-2 text-sm text-muted-foreground">
-                    갱신알림과 함께 스마트한 계약 관리를 시작하세요
+                    RenewAlert로 반복 지출을 관리해보세요
                 </p>
             </div>
 

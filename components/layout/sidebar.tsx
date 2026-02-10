@@ -33,14 +33,17 @@ export function Sidebar() {
         <>
             {/* Desktop Sidebar */}
             <aside className="hidden md:flex w-64 flex-col fixed inset-y-0 left-0 bg-background border-r border-border z-50">
-                <Link href="/" className="h-16 flex items-center justify-between px-6 border-b border-zinc-900/50 hover:bg-zinc-900/10 transition-colors">
-                    <div className="flex items-center gap-2.5 group cursor-pointer">
-                        <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center shadow-2xl group-hover:scale-105 transition-transform duration-200">
+                <Link href="/" className="h-20 flex items-center justify-between px-6 border-b border-zinc-900/60 hover:bg-zinc-900/10 transition-colors">
+                    <div className="flex items-center gap-3 group cursor-pointer">
+                        <div className="w-9 h-9 rounded-xl bg-zinc-900 border border-zinc-700 flex items-center justify-center shadow-2xl group-hover:scale-105 transition-transform duration-200">
                             <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
                         </div>
-                        <span className="text-lg font-bold tracking-tight text-white uppercase px-1">RenewAlert</span>
+                        <div className="flex flex-col leading-tight">
+                            <span className="text-xl font-extrabold tracking-tight text-white uppercase">RenewAlert</span>
+                            <span className="text-[10px] text-zinc-400 font-semibold tracking-wide">반복 지출 통제 시스템</span>
+                        </div>
                     </div>
                 </Link>
 

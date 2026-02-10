@@ -13,7 +13,9 @@ CREATE TABLE IF NOT EXISTS public.users (
   total_saved_krw DECIMAL(12,2) DEFAULT 0,
   plan_expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  decision_status VARCHAR(20) CHECK (decision_status IN ('kept', 'terminated')),
+  decision_date TIMESTAMPTZ
 );
 
 -- Contracts table
@@ -32,7 +34,9 @@ CREATE TABLE IF NOT EXISTS public.contracts (
   saved_amount DECIMAL(12,2),
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  decision_status VARCHAR(20) CHECK (decision_status IN ('kept', 'terminated')),
+  decision_date TIMESTAMPTZ
 );
 
 -- Notification logs table
@@ -60,6 +64,7 @@ CREATE TABLE IF NOT EXISTS public.cancellation_guides (
 CREATE INDEX IF NOT EXISTS idx_contracts_user_id ON public.contracts(user_id);
 CREATE INDEX IF NOT EXISTS idx_contracts_expires_at ON public.contracts(expires_at);
 CREATE INDEX IF NOT EXISTS idx_contracts_status ON public.contracts(status);
+CREATE INDEX IF NOT EXISTS idx_contracts_decision_status ON public.contracts(decision_status);
 CREATE INDEX IF NOT EXISTS idx_notification_logs_contract_id ON public.notification_logs(contract_id);
 
 -- Row Level Security

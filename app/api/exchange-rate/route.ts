@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getUSDToKRWRate } from '@/lib/exchange-rate';
+import { DEFAULT_EXCHANGE_RATE, getExchangeRate } from '@/lib/exchangeRate';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 3600; // Cache for 1 hour
 
 export async function GET() {
     try {
-        const rate = await getUSDToKRWRate();
-        return NextResponse.json({ rate });
-    } catch (error) {
-        return NextResponse.json({ error: 'Failed to fetch exchange rate', rate: 1400 }, { status: 500 });
+        const { rate, source } = await getExchangeRate();
+        return NextResponse.json({ rate, source });
+    } catch {
+        return NextResponse.json({ error: 'Failed to fetch exchange rate', rate: DEFAULT_EXCHANGE_RATE, source: 'mock' }, { status: 500 });
     }
 }

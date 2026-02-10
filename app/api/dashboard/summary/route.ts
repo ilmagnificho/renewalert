@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { getUSDToKRWRate } from '@/lib/exchange-rate';
+import { getExchangeRate } from '@/lib/exchangeRate';
 
 export async function GET() {
     const supabase = await createClient();
@@ -20,17 +20,28 @@ export async function GET() {
         return NextResponse.json({ error: userError.message }, { status: 500 });
     }
 
-    const exchangeRate = await getUSDToKRWRate();
+    const { rate: exchangeRate, source: exchangeRateSource } = await getExchangeRate();
 
-    const { data: contracts, error } = await supabase
+    let contractQuery = await supabase
         .from('contracts')
         .select('*')
         .eq('user_id', user.id)
-        .eq('status', 'active');
+        .eq('status', 'active')
+        .is('decision_status', null);
 
-    if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    if (contractQuery.error && contractQuery.error.message.includes('decision_status')) {
+        contractQuery = await supabase
+            .from('contracts')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('status', 'active');
     }
+
+    if (contractQuery.error) {
+        return NextResponse.json({ error: contractQuery.error.message }, { status: 500 });
+    }
+
+    const contracts = contractQuery.data || [];
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -44,7 +55,7 @@ export async function GET() {
     let totalYearlyKRW = 0;
     let totalYearlyUSD = 0;
 
-    (contracts || []).forEach((contract) => {
+    contracts.forEach((contract) => {
         const expiresAt = new Date(contract.expires_at);
         expiresAt.setHours(0, 0, 0, 0);
         const diff = Math.ceil((expiresAt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -65,9 +76,6 @@ export async function GET() {
         } else if (contract.cycle === 'yearly') {
             yearlyAmount = amount;
             monthlyAmount = Math.round(amount / 12);
-        } else {
-            monthlyAmount = 0;
-            yearlyAmount = 0;
         }
 
         if (isUSD) {
@@ -79,7 +87,6 @@ export async function GET() {
         }
     });
 
-    // Grand Totals (Converted to KRW)
     const totalMonthly = totalMonthlyKRW + (totalMonthlyUSD * exchangeRate);
     const totalYearly = totalYearlyKRW + (totalYearlyUSD * exchangeRate);
 
@@ -94,7 +101,8 @@ export async function GET() {
         totalYearlyKRW,
         totalYearlyUSD,
         exchangeRate,
-        totalContracts: contracts?.length || 0,
-        totalSavedKRW: userData?.total_saved_krw || 0
+        exchangeRateSource,
+        totalContracts: contracts.length,
+        totalSavedKRW: userData?.total_saved_krw || 0,
     });
 }
