@@ -242,7 +242,7 @@ export default function ContractsPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 dark:from-slate-900 dark:to-slate-800 from-white to-slate-50 border-border">
+                <Card className="bg-gradient-to-br from-zinc-900 to-black border-zinc-800">
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
                             <span className="text-sm font-medium text-blue-400">월 예상 구독료 (합산)</span>

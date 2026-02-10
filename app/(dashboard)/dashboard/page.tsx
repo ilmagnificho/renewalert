@@ -185,7 +185,7 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="col-span-1 lg:col-span-1 bg-gradient-to-br from-slate-900 to-slate-800 border-slate-700 dark:from-slate-900 dark:to-slate-800 from-white to-slate-50 border-border">
+                <Card className="col-span-1 lg:col-span-1 bg-gradient-to-br from-zinc-900 to-black border-zinc-800">
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
                             <span className="text-sm font-medium text-blue-500 dark:text-blue-200">월 예상 구독료 (합산)</span>
