@@ -39,7 +39,7 @@ export function Sidebar() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                             </svg>
                         </div>
-                        <span className="text-lg font-bold tracking-tight text-white">갱신알림</span>
+                        <span className="text-lg font-bold tracking-tight text-white uppercase px-1">RenewAlert</span>
                     </div>
                 </Link>
 
@@ -67,7 +67,7 @@ export function Sidebar() {
                     <div className="space-y-4">
                         <Link href="/contracts/new">
                             <Button className="w-full bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border">
-                                + 새 계약 등록
+                                + 지출 리스크 등록
                             </Button>
                         </Link>
                         <button

@@ -142,7 +142,7 @@ function LoginContent() {
                 </div>
                 <h2 className="text-3xl font-bold tracking-tight text-foreground">로그인</h2>
                 <p className="mt-2 text-sm text-muted-foreground">
-                    계약 관리의 시작, 갱신알림
+                    재무 통제의 시작, RenewAlert
                 </p>
             </div>
 
