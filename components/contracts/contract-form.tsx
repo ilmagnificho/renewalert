@@ -27,6 +27,8 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
         auto_renew: contract?.auto_renew || false,
         notice_days: contract?.notice_days || 30,
         memo: contract?.memo || '',
+        tier: contract?.tier || '',
+        owner_name: contract?.owner_name || '',
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -89,22 +91,24 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
             <CardContent className="p-8">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {mode === 'create' && (
-                        <div className="space-y-3 mb-8 p-4 bg-slate-900/80 border border-slate-800 rounded-lg">
-                            <label className="text-sm font-medium text-slate-400">간편 입력 (자주 쓰는 서비스)</label>
+                        <div className="space-y-3 mb-8 p-4 bg-secondary/20 border border-border rounded-lg">
+                            <label className="text-sm font-medium text-muted-foreground">✨ AI / 인기 서비스 간편 입력</label>
                             <div className="flex flex-wrap gap-2">
                                 {[
-                                    { name: 'Adobe Creative Cloud', type: 'saas', amount: 62000, cycle: 'monthly', notice_days: 14 },
-                                    { name: 'AWS', type: 'saas', amount: 0, cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Slack', type: 'saas', amount: 11000, cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Google Workspace', type: 'saas', amount: 15000, cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Microsoft 365', type: 'saas', amount: 12500, cycle: 'monthly', notice_days: 30 },
-                                    { name: 'Notion', type: 'saas', amount: 12000, cycle: 'monthly', notice_days: 30 },
+                                    { name: 'ChatGPT', type: 'saas', tier: 'Plus', amount: 20, currency: 'USD', cycle: 'monthly', notice_days: 1 },
+                                    { name: 'Claude', type: 'saas', tier: 'Pro', amount: 20, currency: 'USD', cycle: 'monthly', notice_days: 1 },
+                                    { name: 'Gemini', type: 'saas', tier: 'Advanced', amount: 29000, currency: 'KRW', cycle: 'monthly', notice_days: 1 },
+                                    { name: 'Manus', type: 'saas', tier: 'Pro', amount: 30000, currency: 'KRW', cycle: 'monthly', notice_days: 1 },
+                                    { name: 'Notion', type: 'saas', tier: 'Plus', amount: 8, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Slack', type: 'saas', tier: 'Pro', amount: 8.75, currency: 'USD', cycle: 'monthly', notice_days: 30 },
+                                    { name: 'Adobe CC', type: 'saas', tier: 'All Apps', amount: 62000, currency: 'KRW', cycle: 'monthly', notice_days: 14 },
+                                    { name: 'AWS', type: 'saas', tier: 'Usage', amount: 0, currency: 'USD', cycle: 'monthly', notice_days: 30 },
                                 ].map((preset) => (
                                     <button
                                         key={preset.name}
                                         type="button"
                                         onClick={() => setFormData({ ...formData, ...preset } as ContractFormData)}
-                                        className="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-full border border-slate-700 transition-colors"
+                                        className="px-3 py-1.5 text-xs font-medium bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-full border border-border transition-colors shadow-sm"
                                     >
                                         + {preset.name}
                                     </button>
@@ -113,24 +117,44 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
                         </div>
                     )}
 
-                    <Input
-                        id="name"
-                        label="서비스/계약명 *"
-                        placeholder="예: Figma, AWS, 사무실 임대"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        required
-                        className="bg-slate-950/50 border-slate-700"
-                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <Input
+                            id="name"
+                            label="서비스/계약명 *"
+                            placeholder="예: ChatGPT, AWS, 사무실 임대"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            required
+                            className="bg-background border-input"
+                        />
+                        <Input
+                            id="tier"
+                            label="요금제 (Tier)"
+                            placeholder="예: Plus, Pro, Enterprise"
+                            value={formData.tier || ''}
+                            onChange={(e) => setFormData({ ...formData, tier: e.target.value })}
+                            className="bg-background border-input"
+                        />
+                    </div>
 
-                    <Select
-                        id="type"
-                        label="유형 *"
-                        options={typeOptions}
-                        value={formData.type}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value as ContractFormData['type'] })}
-                        className="bg-slate-950/50 border-slate-700"
-                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <Select
+                            id="type"
+                            label="유형 *"
+                            options={typeOptions}
+                            value={formData.type}
+                            onChange={(e) => setFormData({ ...formData, type: e.target.value as ContractFormData['type'] })}
+                            className="bg-background border-input"
+                        />
+                        <Input
+                            id="owner_name"
+                            label="사용자 (담당자/부서)"
+                            placeholder="예: 디자인팀, 김철수, 공용"
+                            value={formData.owner_name || ''}
+                            onChange={(e) => setFormData({ ...formData, owner_name: e.target.value })}
+                            className="bg-background border-input"
+                        />
+                    </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                         <div className="col-span-2 sm:col-span-1">
@@ -142,7 +166,7 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
                                 value={formData.amount || ''}
                                 onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
                                 required
-                                className="bg-slate-950/50 border-slate-700"
+                                className="bg-background border-input"
                             />
                         </div>
                         <Select
@@ -151,7 +175,7 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
                             options={currencyOptions}
                             value={formData.currency}
                             onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                            className="bg-slate-950/50 border-slate-700"
+                            className="bg-background border-input"
                         />
                         <Select
                             id="cycle"
@@ -159,7 +183,7 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
                             options={cycleOptions}
                             value={formData.cycle}
                             onChange={(e) => setFormData({ ...formData, cycle: e.target.value as ContractFormData['cycle'] })}
-                            className="bg-slate-950/50 border-slate-700"
+                            className="bg-background border-input"
                         />
                     </div>
 
@@ -171,7 +195,7 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
                             value={formData.expires_at}
                             onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
                             required
-                            className="bg-slate-950/50 border-slate-700"
+                            className="bg-background border-input"
                         />
                         <div className="space-y-2">
                             <Input
@@ -181,9 +205,9 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
                                 placeholder="30"
                                 value={formData.notice_days}
                                 onChange={(e) => setFormData({ ...formData, notice_days: Number(e.target.value) })}
-                                className="bg-slate-950/50 border-slate-700"
+                                className="bg-background border-input"
                             />
-                            <p className="text-xs text-slate-500">
+                            <p className="text-xs text-muted-foreground">
                                 * 자동갱신을 막으려면 만기 며칠 전까지 해지 통보를 해야 하나요?
                             </p>
                         </div>

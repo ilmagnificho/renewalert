@@ -52,6 +52,8 @@ export async function PUT(
             auto_renew: body.auto_renew,
             notice_days: body.notice_days,
             memo: body.memo,
+            tier: body.tier,
+            owner_name: body.owner_name,
         })
         .eq('id', id)
         .eq('user_id', user.id)

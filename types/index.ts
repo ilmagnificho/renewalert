@@ -31,6 +31,8 @@ export interface Contract {
   memo: string | null;
   created_at: string;
   updated_at: string;
+  tier?: string;
+  owner_name?: string;
 }
 
 export interface NotificationLog {
@@ -51,6 +53,8 @@ export interface ContractFormData {
   auto_renew: boolean;
   notice_days: number;
   memo: string;
+  tier?: string;
+  owner_name?: string;
 }
 
 export interface DashboardSummary {

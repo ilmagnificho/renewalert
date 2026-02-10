@@ -164,13 +164,13 @@ export default function ContractsPage() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-white">계약 관리</h1>
-                    <p className="text-sm text-slate-400 mt-1">
+                    <h1 className="text-2xl font-bold text-foreground">계약 관리</h1>
+                    <p className="text-sm text-muted-foreground mt-1">
                         등록된 계약 {contracts.length}개
                     </p>
                 </div>
                 <Link href="/contracts/new">
-                    <Button className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20 w-full sm:w-auto">
+                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 w-full sm:w-auto">
                         <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
@@ -180,7 +180,7 @@ export default function ContractsPage() {
             </div>
 
             {/* Filters */}
-            <div className="p-4 bg-slate-900/50 border border-slate-800 rounded-xl backdrop-blur-sm">
+            <div className="p-4 bg-muted/30 border border-border rounded-xl backdrop-blur-sm">
                 <div className="flex flex-col sm:flex-row gap-4">
                     <form onSubmit={handleSearch} className="flex-1 relative">
                         <Input
@@ -188,9 +188,9 @@ export default function ContractsPage() {
                             placeholder="계약명으로 검색..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="bg-slate-950/50 border-slate-700 pl-10"
+                            className="bg-background border-input pl-10"
                         />
-                        <div className="absolute left-3 top-3 text-slate-500">
+                        <div className="absolute left-3 top-3 text-muted-foreground">
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
@@ -202,14 +202,14 @@ export default function ContractsPage() {
                             options={typeOptions}
                             value={typeFilter}
                             onChange={(e) => setTypeFilter(e.target.value)}
-                            className="bg-slate-950/50 border-slate-700 min-w-[140px]"
+                            className="bg-background border-input min-w-[140px]"
                         />
                         <Select
                             id="statusFilter"
                             options={statusOptions}
                             value={statusFilter}
                             onChange={(e) => setStatusFilter(e.target.value)}
-                            className="bg-slate-950/50 border-slate-700 min-w-[140px]"
+                            className="bg-background border-input min-w-[140px]"
                         />
                     </div>
                 </div>
@@ -219,20 +219,20 @@ export default function ContractsPage() {
             {isLoading ? (
                 <div className="space-y-4 animate-pulse">
                     {[...Array(3)].map((_, i) => (
-                        <div key={i} className="h-24 bg-slate-800/50 border border-slate-800 rounded-xl" />
+                        <div key={i} className="h-24 bg-muted/50 border border-border rounded-xl" />
                     ))}
                 </div>
             ) : contracts.length === 0 ? (
-                <div className="text-center py-20 bg-slate-900/30 border border-dashed border-slate-800 rounded-xl">
-                    <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mx-auto mb-6 shadow-inner">
+                <div className="text-center py-20 bg-muted/20 border border-dashed border-border rounded-xl">
+                    <div className="w-16 h-16 rounded-full bg-secondary border border-border flex items-center justify-center mx-auto mb-6 shadow-inner">
                         <span className="text-3xl">📭</span>
                     </div>
-                    <h3 className="text-lg font-medium text-slate-200 mb-2">등록된 계약이 없습니다</h3>
-                    <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto">
+                    <h3 className="text-lg font-medium text-foreground mb-2">등록된 계약이 없습니다</h3>
+                    <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
                         매월 나가는 구독료, 갱신이 필요한 계약들을<br />지금 바로 등록하고 관리해보세요.
                     </p>
                     <Link href="/contracts/new">
-                        <Button variant="outline" className="border-slate-700 hover:bg-slate-800">
+                        <Button variant="outline" className="border-border hover:bg-accent hover:text-accent-foreground">
                             첫 계약 등록하기
                         </Button>
                     </Link>

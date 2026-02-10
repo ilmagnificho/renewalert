@@ -88,6 +88,8 @@ export async function POST(request: Request) {
             auto_renew: body.auto_renew || false,
             notice_days: body.notice_days || 30,
             memo: body.memo || null,
+            tier: body.tier || '',
+            owner_name: body.owner_name || '',
         })
         .select()
         .single();
