@@ -16,37 +16,23 @@ interface CancellationExecutionCardProps {
 export function CancellationExecutionCard({ contract, guide, exchangeRate }: CancellationExecutionCardProps) {
     const router = useRouter();
     const { addToast } = useToast();
-    const [showRenewModal, setShowRenewModal] = useState(false);
+    const [showKeepModal, setShowKeepModal] = useState(false);
     const [showGuideModal, setShowGuideModal] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
     const savings = calculateEstimatedAnnualSavings(contract.amount, contract.cycle);
 
-    const handleRenew = async () => {
+    const handleKeepDecision = async () => {
         setIsProcessing(true);
         try {
-            // Calculate next expiration date based on cycle
-            const currentExpiresAt = new Date(contract.expires_at);
-            const nextDate = new Date(currentExpiresAt);
-
-            if (contract.cycle === 'monthly') {
-                nextDate.setMonth(nextDate.getMonth() + 1);
-            } else if (contract.cycle === 'yearly') {
-                nextDate.setFullYear(nextDate.getFullYear() + 1);
-            } else {
-                // Default to 1 month if unknown
-                nextDate.setMonth(nextDate.getMonth() + 1);
-            }
-
-            const res = await fetch(`/api/contracts/${contract.id}/renew`, {
+            const res = await fetch(`/api/contracts/${contract.id}/keep`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ next_expires_at: nextDate.toISOString() }),
             });
 
             if (res.ok) {
-                addToast('success', '계약이 갱신(유지) 처리되었습니다.');
-                setShowRenewModal(false);
+                addToast('success', '유지 결정이 기록되었습니다.');
+                setShowKeepModal(false);
                 router.refresh();
             } else {
                 const error = await res.json();
@@ -141,7 +127,7 @@ export function CancellationExecutionCard({ contract, guide, exchangeRate }: Can
                             <Button
                                 variant="outline"
                                 className="flex-1 border-orange-500/20 hover:bg-orange-500/10 text-orange-500 font-bold"
-                                onClick={() => setShowRenewModal(true)}
+                                onClick={() => setShowKeepModal(true)}
                             >
                                 유지하기 (결정 완료)
                             </Button>
@@ -154,7 +140,7 @@ export function CancellationExecutionCard({ contract, guide, exchangeRate }: Can
             <Modal
                 isOpen={showGuideModal}
                 onClose={() => setShowGuideModal(false)}
-                title="해지 안내 준비 중"
+                title="해지 안내"
                 footer={
                     <Button onClick={() => setShowGuideModal(false)}>
                         확인
@@ -164,19 +150,19 @@ export function CancellationExecutionCard({ contract, guide, exchangeRate }: Can
                 <div className="space-y-4">
                     <p className="text-muted-foreground leading-relaxed">
                         현재 <strong>{contract.name}</strong>의 해지 프로세스를 정리하고 있습니다.<br />
-                        직접 해지 페이지를 찾으시려면 서비스 설정의 '구독' 또는 '결제' 메뉴를 확인해주세요.
+                        직접 해지 페이지를 찾으시려면 서비스 설정의 &apos;구독&apos; 또는 &apos;결제&apos; 메뉴를 확인해주세요.
                     </p>
                 </div>
             </Modal>
 
-            {/* Renew Confirm Modal */}
+            {/* Keep Decision Confirm Modal */}
             <ConfirmModal
-                isOpen={showRenewModal}
-                onClose={() => setShowRenewModal(false)}
-                onConfirm={handleRenew}
-                title="이번 갱신을 유지하시겠습니까?"
-                message="유지로 결정하면 다음 갱신일까지 알림이 중단됩니다. 이 결정은 히스토리에 기록됩니다."
-                confirmText="유지로 기록"
+                isOpen={showKeepModal}
+                onClose={() => setShowKeepModal(false)}
+                onConfirm={handleKeepDecision}
+                title="이 계약을 유지하기로 결정하셨나요?"
+                message="확인하면 이 계약은 &apos;유지&apos;로 기록되고 긴급/주의 목록에서 즉시 제외됩니다."
+                confirmText="유지 결정 확정"
                 isLoading={isProcessing}
             />
         </>

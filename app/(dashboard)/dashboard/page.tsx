@@ -3,76 +3,106 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Contract, DashboardSummary } from '@/types';
+import { Contract } from '@/types';
 import { ContractCard } from '@/components/contracts/contract-card';
 import Link from 'next/link';
 import { formatCurrency, getUrgencyLevel, getDaysUntil } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
-import { SavedMoneyCounter } from '@/components/dashboard/saved-money-counter';
 import { CancellationExecutionCard } from '@/components/contracts/execution-card';
-import { ShockTrigger } from '@/components/dashboard/shock-trigger';
 import { useExchangeRate } from '@/hooks/use-exchange-rate';
 
 export const dynamic = 'force-dynamic';
 
 export default function DashboardPage() {
-    const { rate: exchangeRate, isLoading: isRateLoading } = useExchangeRate();
+    const { rate: exchangeRate, source: exchangeRateSource, isLoading: isRateLoading } = useExchangeRate();
     const [contracts, setContracts] = useState<Contract[]>([]);
     const [userName, setUserName] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [userSavedAmount, setUserSavedAmount] = useState(0);
 
     useEffect(() => {
+        const supabase = createClient();
+        let isMounted = true;
+
         const fetchDashboardData = async () => {
             try {
-                const supabase = createClient();
                 const { data: { user } } = await supabase.auth.getUser();
 
                 if (!user) {
-                    // Guest Mode Mock Data
+                    if (!isMounted) return;
                     setUserName('게스트');
-                    // ... (Mock data logic would go here if needed, but for now we focus on authenticated flow or empty state)
+                    setContracts([]);
+                    setUserSavedAmount(0);
                     setIsLoading(false);
                     return;
                 }
 
-                setUserName(user.user_metadata.name || user.email?.split('@')[0] || '사용자');
+                if (isMounted) {
+                    setUserName(user.user_metadata.name || user.email?.split('@')[0] || '사용자');
+                }
 
-                // Fetch User Details for Total Saved
                 const { data: userData } = await supabase
                     .from('users')
                     .select('total_saved_krw')
                     .eq('id', user.id)
                     .single();
 
-                if (userData) setUserSavedAmount(userData.total_saved_krw || 0);
+                if (isMounted && userData) {
+                    setUserSavedAmount(userData.total_saved_krw || 0);
+                }
 
-                // Fetch All Active Contracts
-                const { data: activeContracts, error } = await supabase
+                let activeContractsQuery = await supabase
                     .from('contracts')
                     .select('*')
                     .eq('user_id', user.id)
-                    .eq('status', 'active');
+                    .eq('status', 'active')
+                    .is('decision_status', null);
 
-                if (activeContracts) {
-                    setContracts(activeContracts);
+                if (activeContractsQuery.error && activeContractsQuery.error.message.includes('decision_status')) {
+                    activeContractsQuery = await supabase
+                        .from('contracts')
+                        .select('*')
+                        .eq('user_id', user.id)
+                        .eq('status', 'active');
                 }
 
+                if (isMounted && activeContractsQuery.data) {
+                    setContracts(activeContractsQuery.data);
+                }
             } catch (e) {
                 console.error(e);
             } finally {
-                setIsLoading(false);
+                if (isMounted) {
+                    setIsLoading(false);
+                }
             }
         };
 
         fetchDashboardData();
+
+        const contractsChannel = supabase
+            .channel('dashboard-contracts')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'contracts' }, () => {
+                fetchDashboardData();
+            })
+            .subscribe();
+
+        const usersChannel = supabase
+            .channel('dashboard-users')
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'users' }, () => {
+                fetchDashboardData();
+            })
+            .subscribe();
+
+        return () => {
+            isMounted = false;
+            supabase.removeChannel(contractsChannel);
+            supabase.removeChannel(usersChannel);
+        };
     }, []);
 
     // Helper: Compute Summary Stats
     const summary = useMemo(() => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
         let urgent = 0;
         let warning = 0;
         let normal = 0;
@@ -119,28 +149,14 @@ export default function DashboardPage() {
         }).slice(0, 5); // Start with top 5 for "Upcoming" list
     }, [contracts]);
 
-    // Helper: "New Findings" (Real-time Exposure)
-    // Contracts entering alert window (D-30 or D-7) OR created in last 24h
-    const newFindings = useMemo(() => {
-        const now = new Date();
-        const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-
-        return contracts.filter(c => {
-            const daysUntil = getDaysUntil(c.expires_at);
-            const createdAt = new Date(c.created_at);
-
-            // Created recently
-            if (createdAt > oneDayAgo) return true;
-
-            // Just entered Warning zone (D-30) or Urgent zone (D-7)
-            // Note: This is a simplified "just entered" check based on strict equality for "today"
-            if (daysUntil === 30 || daysUntil === 7) return true;
-
-            return false;
-        }).sort((a, b) => b.amount - a.amount); // Sort by amount for impact
+    const alertWindowContracts = useMemo(() => {
+        return contracts.filter((contract) => {
+            const daysUntil = getDaysUntil(contract.expires_at);
+            return daysUntil <= contract.notice_days;
+        });
     }, [contracts]);
 
-    const dangerContract = contracts.find(c => getUrgencyLevel(getDaysUntil(c.expires_at)) === 'danger');
+    const dangerContract = alertWindowContracts.find((contract) => getUrgencyLevel(getDaysUntil(contract.expires_at)) === 'danger');
 
     if (isLoading || isRateLoading) {
         return (
@@ -169,7 +185,7 @@ export default function DashboardPage() {
             </div>
 
             {/* 2. Real-time Exposure: "Fresh Risk" (New Findings) */}
-            {newFindings.length > 0 && (
+            {alertWindowContracts.length > 0 && (
                 <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-500">
                     <div className="flex items-center gap-2">
                         <span className="relative flex h-2 w-2">
@@ -178,16 +194,22 @@ export default function DashboardPage() {
                         </span>
                         <h2 className="text-xs font-black uppercase tracking-widest text-zinc-400">방금 발견된 갱신 예정 비용</h2>
                     </div>
-                    <div className="bg-zinc-900/30 border border-orange-500/20 rounded-xl p-1 hover:border-orange-500/40 transition-colors cursor-pointer group">
+                    <div className="bg-zinc-900/30 border border-orange-500/20 rounded-xl p-1 hover:border-orange-500/40 transition-colors group">
                         <div className="flex items-center justify-between px-4 py-3">
                             <span className="text-sm font-bold text-zinc-300 group-hover:text-white transition-colors">
-                                {newFindings.length}건의 계약이 알림 구간에 진입했습니다
+                                {alertWindowContracts.length}건의 계약이 알림 구간에 있습니다
                             </span>
                             <span className="text-sm font-mono font-bold text-orange-500">
-                                {formatCurrency(newFindings.reduce((acc, c) => acc + (c.currency === 'USD' ? c.amount * exchangeRate : c.amount), 0), 'KRW')}
+                                {formatCurrency(alertWindowContracts.reduce((acc, contract) => {
+                                    if (contract.currency === 'USD') {
+                                        return acc + (contract.cycle === 'yearly' ? contract.amount : contract.amount * 12) * exchangeRate;
+                                    }
+                                    return acc + (contract.cycle === 'yearly' ? contract.amount : contract.amount * 12);
+                                }, 0), 'KRW')} / 연
                             </span>
                         </div>
                     </div>
+                    <p className="text-xs text-zinc-500">지금 검토하면 자동 결제를 막을 수 있습니다.</p>
                 </div>
             )}
 
@@ -279,7 +301,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="mt-4 pt-4 border-t border-zinc-800/50">
                             <p className="text-[10px] text-blue-500/80 mt-1 font-medium">
-                                적용 환율: 1 USD = {formatCurrency(exchangeRate, 'KRW')}
+                                적용 환율: 1 USD = {formatCurrency(exchangeRate, 'KRW')} {exchangeRateSource === 'mock' ? '(임시 기준)' : '(실시간 반영)'}
                             </p>
                         </div>
                     </CardContent>
