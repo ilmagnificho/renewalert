@@ -32,7 +32,7 @@ export default function LandingPage() {
               로그인
             </Link>
             <Link
-              href="/login?auto_demo=true"
+              href="/dashboard"
               className="text-sm font-semibold bg-primary text-primary-foreground px-5 py-2.5 rounded-full hover:bg-primary/90 transition-all duration-200 shadow-lg shadow-primary/20 hover:shadow-primary/40"
             >
               무료로 체험하기

@@ -26,6 +26,106 @@ export default function ContractsPage() {
 
     const fetchContracts = async () => {
         setIsLoading(true);
+
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            // Mock Data
+            const mockData: Contract[] = [
+                {
+                    id: 'mock-1',
+                    name: 'Adobe Creative Cloud',
+                    type: 'saas',
+                    status: 'active',
+                    expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+                    amount: 62000,
+                    currency: 'KRW',
+                    cycle: 'monthly',
+                    memo: '디자인 팀 라이선스',
+                    auto_renew: true,
+                    notice_days: 7,
+                    user_id: 'mock',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                },
+                {
+                    id: 'mock-2',
+                    name: 'AWS Infrastructure',
+                    type: 'saas',
+                    status: 'active',
+                    expires_at: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+                    amount: 450000,
+                    currency: 'USD',
+                    cycle: 'monthly',
+                    memo: '메인 서버 호스팅',
+                    auto_renew: true,
+                    notice_days: 30,
+                    user_id: 'mock',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                },
+                {
+                    id: 'mock-3',
+                    name: '강남 오피스 임대료',
+                    type: 'rent',
+                    status: 'active',
+                    expires_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+                    amount: 3500000,
+                    currency: 'KRW',
+                    cycle: 'monthly',
+                    memo: '본사 사무실',
+                    auto_renew: false,
+                    notice_days: 90,
+                    user_id: 'mock',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                },
+                {
+                    id: 'mock-4',
+                    name: '삼성화재 업무용 자동차보험',
+                    type: 'insurance',
+                    status: 'active',
+                    expires_at: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString(),
+                    amount: 850000,
+                    currency: 'KRW',
+                    cycle: 'yearly',
+                    memo: '법인 차량 3대',
+                    auto_renew: true,
+                    notice_days: 30,
+                    user_id: 'mock',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                },
+                {
+                    id: 'mock-5',
+                    name: 'Slack Enterprise',
+                    type: 'saas',
+                    status: 'renewed',
+                    expires_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+                    amount: 1500000,
+                    currency: 'KRW',
+                    cycle: 'yearly',
+                    memo: '전사 메신저',
+                    auto_renew: true,
+                    notice_days: 30,
+                    user_id: 'mock',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                }
+            ];
+
+            // Apply client-side filtering for mock data
+            let filtered = mockData;
+            if (typeFilter !== 'all') filtered = filtered.filter(c => c.type === typeFilter);
+            if (statusFilter !== 'all') filtered = filtered.filter(c => c.status === statusFilter);
+            if (search) filtered = filtered.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
+
+            setContracts(filtered);
+            setIsLoading(false);
+            return;
+        }
+
         const params = new URLSearchParams();
         if (typeFilter !== 'all') params.set('type', typeFilter);
         if (statusFilter !== 'all') params.set('status', statusFilter);

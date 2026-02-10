@@ -62,65 +62,14 @@ function LoginContent() {
 
     const handleDemoLogin = async () => {
         setIsDemoLoading(true);
-        // Shared demo account to avoid Rate Limits and Email Validation issues
-        const demoEmail = 'public_demo@renewalert.com';
-        const demoPassword = 'demo1234';
+        // Mock Mode: Bypass authentication completely
+        addToast('success', '체험하기(Mock) 모드로 시작합니다.');
 
-        try {
-            // 1. Try Login first
-            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-                email: demoEmail,
-                password: demoPassword,
-            });
-
-            if (!signInError && signInData.session) {
-                addToast('success', '체험하기 모드로 시작합니다.');
-                router.push('/dashboard');
-                router.refresh();
-                return;
-            }
-
-            // 2. If Login failed, it might be because the user doesn't exist yet. Try Signing Up.
-            console.warn('Demo login failed, attempting signup:', signInError?.message);
-
-            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-                email: demoEmail,
-                password: demoPassword,
-                options: {
-                    data: {
-                        name: 'Demo User',
-                    }
-                }
-            });
-
-            if (signUpError) {
-                if (signUpError.message.includes('already registered')) {
-                    // User exists but login failed -> Password mismatch?
-                    addToast('error', '데모 계정 설정 오류 (비밀번호 불일치). 관리자에게 문의하세요.');
-                } else if (signUpError.message.includes('rate limit')) {
-                    addToast('error', '너무 많은 요청이 발생했습니다. 잠시 후 다시 시도해주세요.');
-                } else {
-                    addToast('error', `데모 계정 오류: ${signUpError.message}`);
-                }
-                setIsDemoLoading(false);
-                return;
-            }
-
-            if (signUpData.session) {
-                addToast('success', '체험하기 계정이 생성되었습니다.');
-                router.push('/dashboard');
-                router.refresh();
-            } else {
-                // Signup successful but no session -> Email confirmation enabled
-                addToast('info', '계정이 생성되었으나 이메일 인증이 필요할 수 있습니다. (Supabase 설정 확인 필요)');
-                setIsDemoLoading(false);
-            }
-
-        } catch (err) {
-            console.error('Unexpected Demo Error:', err);
-            addToast('error', '알 수 없는 오류가 발생했습니다.');
-            setIsDemoLoading(false);
-        }
+        // Slight delay for UX
+        setTimeout(() => {
+            router.push('/dashboard');
+            router.refresh();
+        }, 500);
     };
 
     return (
