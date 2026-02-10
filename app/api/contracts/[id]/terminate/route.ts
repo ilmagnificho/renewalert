@@ -34,14 +34,23 @@ export async function POST(
         return NextResponse.json({ error: 'Contract not found' }, { status: 404 });
     }
 
-    let updatedContract: Record<string, unknown> | null = null;
-
-    const updateVariants: ContractUpdatePayload[] = [
+    const decisionDate = new Date().toISOString();
+    const updatePayloads: ContractUpdatePayload[] = [
         {
             status: 'terminated',
             saved_amount: savedAmount,
             decision_status: 'terminated',
-            decision_date: new Date().toISOString(),
+            decision_date: decisionDate,
+        },
+        {
+            status: 'terminated',
+            saved_amount: savedAmount,
+            decision_status: 'terminated',
+        },
+        {
+            status: 'terminated',
+            saved_amount: savedAmount,
+            decision_date: decisionDate,
         },
         {
             status: 'terminated',
@@ -52,9 +61,10 @@ export async function POST(
         },
     ];
 
+    let updatedContract: Record<string, unknown> | null = null;
     let lastUpdateError = '';
 
-    for (const payload of updateVariants) {
+    for (const payload of updatePayloads) {
         const { data, error } = await supabase
             .from('contracts')
             .update(payload)
@@ -69,13 +79,16 @@ export async function POST(
         }
 
         lastUpdateError = error.message;
+
+        if (error.code !== '42703' && !error.message.toLowerCase().includes('column')) {
+            break;
+        }
     }
 
     if (!updatedContract) {
         return NextResponse.json({ error: lastUpdateError || 'Failed to terminate contract' }, { status: 500 });
     }
 
-    // Atomically update user's total saved amount (Convert to KRW if needed)
     let savedKRW = savedAmount;
     if (contract.currency === 'USD') {
         const { getUSDToKRWRate } = await import('@/lib/exchange-rate');
