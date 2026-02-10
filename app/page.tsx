@@ -67,7 +67,7 @@ export default function LandingPage() {
       <section className="relative pt-32 pb-24 px-6 z-10 overflow-hidden">
         <div className="max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-zinc-900/50 border border-zinc-800 text-zinc-500 text-[10px] uppercase tracking-[0.2em] font-black px-4 py-1.5 rounded-full mb-10 backdrop-blur-md">
-            <span>Corporate Cost Prevention System</span>
+            <span>Decision Timing + Cost Prevention</span>
           </div>
           <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-[1.05] mb-10 text-white animate-fade-in-up">
             자동 갱신 전에<br />
@@ -82,7 +82,7 @@ export default function LandingPage() {
               href="/login?auto_demo=true"
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-black font-black px-10 py-5 rounded-2xl hover:bg-zinc-200 transition-all duration-300 text-xl shadow-2xl shadow-white/10"
             >
-              우리 팀 지출 관리 시작하기
+              우리 팀 의사결정 타이밍 관리 시작하기
             </Link>
           </div>
           <p className="mt-8 text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">
@@ -169,7 +169,7 @@ export default function LandingPage() {
               href="/login"
               className="inline-flex items-center justify-center gap-2 bg-white text-black font-black px-12 py-5 rounded-2xl hover:bg-zinc-200 transition-all duration-300 text-xl"
             >
-              우리 팀 지출 관리 시작하기
+              우리 팀 의사결정 타이밍 관리 시작하기
             </Link>
           </div>
         </div>
