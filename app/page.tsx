@@ -58,7 +58,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="/login?auto_demo=true"
+              href="/dashboard"
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold px-8 py-4 rounded-xl hover:bg-primary/90 transition-all duration-200 text-lg shadow-xl shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-1"
             >
               무료로 체험하기 (데모)
