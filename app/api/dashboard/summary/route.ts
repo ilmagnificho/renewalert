@@ -10,6 +10,16 @@ export async function GET() {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('total_saved_krw')
+        .eq('id', user.id)
+        .single();
+
+    if (userError) {
+        return NextResponse.json({ error: userError.message }, { status: 500 });
+    }
+
     const exchangeRate = await getUSDToKRWRate();
 
     const { data: contracts, error } = await supabase
@@ -85,5 +95,6 @@ export async function GET() {
         totalYearlyUSD,
         exchangeRate,
         totalContracts: contracts?.length || 0,
+        totalSavedKRW: userData?.total_saved_krw || 0
     });
 }

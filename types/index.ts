@@ -4,13 +4,14 @@ export type ContractStatus = 'active' | 'renewed' | 'terminated';
 export type PaymentCycle = 'monthly' | 'yearly' | 'onetime';
 export type NotificationType = '90d' | '30d' | '7d' | '1d';
 export type NotificationStatus = 'sent' | 'failed';
-export type PlanType = 'free' | 'pro';
+export type PlanType = 'free' | 'core' | 'growth';
 
 export interface User {
   id: string;
   email: string;
   name: string | null;
   plan: PlanType;
+  total_saved_krw: number;
   plan_expires_at: string | null;
   created_at: string;
   updated_at: string;
@@ -28,11 +29,23 @@ export interface Contract {
   auto_renew: boolean;
   notice_days: number;
   status: ContractStatus;
+  saved_amount: number | null;
   memo: string | null;
   created_at: string;
   updated_at: string;
   tier?: string;
   owner_name?: string;
+}
+
+export interface CancellationGuide {
+  id: string;
+  service_name: string;
+  cancellation_url: string;
+  notice_period_days: number;
+  steps: string;
+  penalty_notes: string;
+  is_annual_only: boolean;
+  created_at: string;
 }
 
 export interface NotificationLog {
@@ -69,6 +82,7 @@ export interface DashboardSummary {
   totalYearlyUSD: number;
   totalContracts: number;
   exchangeRate: number;
+  totalSavedKRW: number;
 }
 
 // Helper constants

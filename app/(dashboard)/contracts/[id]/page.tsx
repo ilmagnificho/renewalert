@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Contract, CONTRACT_TYPE_LABELS, PAYMENT_CYCLE_LABELS, CONTRACT_STATUS_LABELS } from '@/types';
+import { Contract, CONTRACT_TYPE_LABELS, PAYMENT_CYCLE_LABELS, CONTRACT_STATUS_LABELS, CancellationGuide } from '@/types';
 import { ContractForm } from '@/components/contracts/contract-form';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmModal } from '@/components/ui/modal';
 import { useToast } from '@/components/ui/toast';
-import { formatCurrency, getDaysUntil, getUrgencyLevel, formatDDay, formatDate } from '@/lib/utils';
+import { formatCurrency, getDaysUntil, getUrgencyLevel, formatDDay, formatDate, calculateEstimatedAnnualSavings } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
+import { CancellationExecutionCard } from '@/components/contracts/execution-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,12 +21,15 @@ export default function ContractDetailPage() {
     const router = useRouter();
     const { addToast } = useToast();
     const [contract, setContract] = useState<Contract | null>(null);
+    const [guide, setGuide] = useState<CancellationGuide | null>(null);
+    const [exchangeRate, setExchangeRate] = useState<number>(1400);
     const [isLoading, setIsLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [showRenewModal, setShowRenewModal] = useState(false);
     const [showTerminateModal, setShowTerminateModal] = useState(false);
     const [nextExpiresAt, setNextExpiresAt] = useState('');
+    const [savedAmount, setSavedAmount] = useState<string>('');
     const [isDeleting, setIsDeleting] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -34,10 +38,26 @@ export default function ContractDetailPage() {
     }, [params.id]);
 
     const fetchContract = async () => {
-        const res = await fetch(`/api/contracts/${params.id}`);
+        setIsLoading(true);
+        const [res, summaryRes] = await Promise.all([
+            fetch(`/api/contracts/${params.id}`),
+            fetch('/api/dashboard/summary')
+        ]);
+
         if (res.ok) {
             const data = await res.json();
             setContract(data);
+            setSavedAmount(calculateEstimatedAnnualSavings(data.amount, data.cycle).toString());
+
+            // Fetch cancellation guide
+            const guideRes = await fetch(`/api/contracts/guide?name=${encodeURIComponent(data.name)}`);
+            if (guideRes.ok) {
+                setGuide(await guideRes.json());
+            }
+        }
+        if (summaryRes.ok) {
+            const summary = await summaryRes.json();
+            setExchangeRate(summary.exchangeRate);
         }
         setIsLoading(false);
     };
@@ -77,9 +97,11 @@ export default function ContractDetailPage() {
         setIsProcessing(true);
         const res = await fetch(`/api/contracts/${params.id}/terminate`, {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ saved_amount: Number(savedAmount) }),
         });
         if (res.ok) {
-            addToast('success', '해지 완료 처리되었습니다.');
+            addToast('success', '해지 완료 처리되었습니다. 절감된 비용이 기록되었습니다.');
             fetchContract();
         } else {
             addToast('error', '처리에 실패했습니다.');
@@ -89,7 +111,7 @@ export default function ContractDetailPage() {
     };
 
     if (isLoading) {
-        return <div className="max-w-2xl mx-auto"><div className="h-64 bg-slate-800 rounded-xl animate-pulse" /></div>;
+        return <div className="max-w-3xl mx-auto"><div className="h-64 bg-slate-900/50 border border-slate-800 rounded-xl animate-pulse" /></div>;
     }
 
     if (!contract) {
@@ -133,12 +155,14 @@ export default function ContractDetailPage() {
                     </button>
                     <div className="flex items-center gap-3">
                         <h1 className="text-3xl font-bold text-white">{contract.name}</h1>
-                        {contract.status === 'active' && daysUntil <= 30 && (
-                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${daysUntil <= 7
-                                    ? 'bg-red-500/10 text-red-500 border-red-500/20'
-                                    : 'bg-orange-500/10 text-orange-500 border-orange-500/20'
+                        {contract.status === 'active' && (
+                            <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${getUrgencyLevel(daysUntil) === 'danger'
+                                ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                                : getUrgencyLevel(daysUntil) === 'warning'
+                                    ? 'bg-orange-500/10 text-orange-500 border-orange-500/20'
+                                    : 'bg-green-500/10 text-green-500 border-green-500/20'
                                 }`}>
-                                {daysUntil <= 0 ? '만기' : `D-${daysUntil}`}
+                                {formatDDay(daysUntil)}
                             </span>
                         )}
                     </div>
@@ -152,6 +176,15 @@ export default function ContractDetailPage() {
                     </Button>
                 </div>
             </div>
+
+            {/* Decision Execution Card */}
+            {contract.status === 'active' && (daysUntil <= 30 || guide) && (
+                <CancellationExecutionCard
+                    contract={contract}
+                    guide={guide}
+                    exchangeRate={exchangeRate}
+                />
+            )}
 
             {/* Contract Details */}
             <Card className="border-slate-800 bg-slate-900/50">
@@ -258,15 +291,46 @@ export default function ContractDetailPage() {
             </Modal>
 
             {/* Terminate Modal */}
-            <ConfirmModal
+            <Modal
                 isOpen={showTerminateModal}
                 onClose={() => setShowTerminateModal(false)}
-                onConfirm={handleTerminate}
                 title="해지 완료 처리"
-                message={`"${contract.name}" 계약을 해지 완료로 처리하시겠습니까?`}
-                confirmText="해지 완료"
-                isLoading={isProcessing}
-            />
+                footer={
+                    <>
+                        <Button variant="ghost" onClick={() => setShowTerminateModal(false)}>취소</Button>
+                        <Button onClick={handleTerminate} isLoading={isProcessing} className="bg-orange-600">해지 확인</Button>
+                    </>
+                }
+            >
+                <div className="space-y-6">
+                    <div>
+                        <p className="text-white font-medium mb-1">"{contract.name}" 계약을 해지 완료로 처리하시겠습니까?</p>
+                        <p className="text-slate-400 text-sm">해지 후에는 더 이상 알림이 발송되지 않습니다.</p>
+                    </div>
+
+                    <div className="p-4 bg-slate-950/50 rounded-xl border border-slate-800 space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-black uppercase tracking-widest text-slate-500">이번 결정으로 방어한 연간 비용</label>
+                            <div className="flex flex-col gap-1">
+                                <Input
+                                    id="savedAmount"
+                                    type="number"
+                                    value={savedAmount}
+                                    onChange={(e) => setSavedAmount(e.target.value)}
+                                    className="bg-slate-900 border-slate-700 font-mono text-lg text-green-500"
+                                    autoFocus
+                                />
+                                <p className="text-[10px] text-slate-500">
+                                    {contract.currency === 'USD'
+                                        ? `≈ ${formatCurrency(Number(savedAmount) * exchangeRate, 'KRW')} (현재 환율 기준)`
+                                        : `${formatCurrency(Number(savedAmount), contract.currency)} 가 연간 절감 비용으로 기록됩니다.`
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 }

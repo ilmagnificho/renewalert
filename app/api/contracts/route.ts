@@ -53,26 +53,28 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Check free plan limit
+    // Check tier-based plan limits
     const { data: profile } = await supabase
         .from('users')
         .select('plan')
         .eq('id', user.id)
         .single();
 
-    if (profile?.plan === 'free') {
-        const { count } = await supabase
-            .from('contracts')
-            .select('*', { count: 'exact', head: true })
-            .eq('user_id', user.id)
-            .eq('status', 'active');
+    const currentPlan = profile?.plan || 'free';
+    const { getPlanLimits } = await import('@/lib/utils');
+    const limits = getPlanLimits(currentPlan);
 
-        if (count !== null && count >= 3) {
-            return NextResponse.json(
-                { error: 'Free plan limit reached. Upgrade to Pro for unlimited contracts.' },
-                { status: 403 }
-            );
-        }
+    const { count } = await supabase
+        .from('contracts')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 'active');
+
+    if (count !== null && count >= limits.maxContracts) {
+        return NextResponse.json(
+            { error: `${limits.name} 요금제의 계약 관리 한도(${limits.maxContracts}건)에 도달했습니다. 더 많은 계약을 관리하려면 플랜을 업그레이드하세요.` },
+            { status: 403 }
+        );
     }
 
     const body = await request.json();

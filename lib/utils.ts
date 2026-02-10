@@ -44,3 +44,50 @@ export function formatDDay(days: number): string {
     if (days === 0) return 'D-Day';
     return `D-${days}`;
 }
+
+/**
+ * Calculates the estimated annual savings if a contract is cancelled.
+ * @param amount The payment amount
+ * @param cycle The payment cycle ('monthly', 'yearly', 'onetime')
+ * @returns The estimated annual savings
+ */
+export function calculateEstimatedAnnualSavings(amount: number, cycle: string): number {
+    if (cycle === 'monthly') {
+        return amount * 12;
+    }
+    if (cycle === 'yearly') {
+        return amount;
+    }
+    return 0; // Onetime payments don't have recurring annual savings in the same sense
+}
+
+export const PLAN_LIMITS = {
+    free: {
+        maxContracts: 3,
+        alertWindows: 1, // Single alert timing
+        hasExecutionCard: false,
+        hasSavedMoneyCounter: false,
+        name: 'Free',
+        price: '₩0',
+    },
+    core: {
+        maxContracts: 40,
+        alertWindows: 3, // Multi-alert timing
+        hasExecutionCard: true,
+        hasSavedMoneyCounter: true,
+        name: 'Core',
+        price: '₩39,000 / 월',
+    },
+    growth: {
+        maxContracts: Infinity,
+        alertWindows: 7, // Advanced alert windows
+        hasExecutionCard: true,
+        hasSavedMoneyCounter: true,
+        name: 'Growth',
+        price: '₩99,000 / 월',
+    }
+} as const;
+
+export function getPlanLimits(plan: string = 'free') {
+    return PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS] || PLAN_LIMITS.free;
+}

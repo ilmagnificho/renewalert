@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Contract, DashboardSummary } from '@/types';
 import { ContractCard } from '@/components/contracts/contract-card';
 import Link from 'next/link';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, getUrgencyLevel, getDaysUntil } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { SavedMoneyCounter } from '@/components/dashboard/saved-money-counter';
+import { CancellationExecutionCard } from '@/components/contracts/execution-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,12 +35,13 @@ export default function DashboardPage() {
                         normal: 7,
                         totalMonthly: 4124000,
                         totalYearly: 49488000,
-                        totalMonthlyKRW: 4096000, // Roughly calculated for mock
+                        totalMonthlyKRW: 4096000,
                         totalMonthlyUSD: 20,
                         totalYearlyKRW: 49152000,
                         totalYearlyUSD: 240,
                         totalContracts: 5,
-                        exchangeRate: 1400
+                        exchangeRate: 1400,
+                        totalSavedKRW: 8420000
                     });
                     setUpcoming([
                         {
@@ -53,6 +56,7 @@ export default function DashboardPage() {
                             memo: '디자인 팀 라이선스',
                             auto_renew: true,
                             notice_days: 7,
+                            saved_amount: null,
                             user_id: 'mock',
                             created_at: new Date().toISOString(),
                             updated_at: new Date().toISOString()
@@ -64,11 +68,12 @@ export default function DashboardPage() {
                             status: 'active',
                             expires_at: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
                             amount: 450000,
-                            currency: 'USD',
+                            currency: 'KRW',
                             cycle: 'monthly',
                             memo: '메인 서버 호스팅',
                             auto_renew: true,
                             notice_days: 30,
+                            saved_amount: null,
                             user_id: 'mock',
                             created_at: new Date().toISOString(),
                             updated_at: new Date().toISOString()
@@ -85,6 +90,7 @@ export default function DashboardPage() {
                             memo: '본사 사무실',
                             auto_renew: false,
                             notice_days: 90,
+                            saved_amount: null,
                             user_id: 'mock',
                             created_at: new Date().toISOString(),
                             updated_at: new Date().toISOString()
@@ -129,7 +135,10 @@ export default function DashboardPage() {
     }
 
     return (
-        <div className="space-y-8 animate-fade-in">
+        <div className="space-y-10 animate-fade-in max-w-7xl mx-auto">
+            {/* Top ROI Counter */}
+            <SavedMoneyCounter amount={summary?.totalSavedKRW || 0} />
+
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">반가워요, {userName}님 👋</h1>
@@ -140,10 +149,21 @@ export default function DashboardPage() {
                         <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
-                        새 계약 등록
+                        지출 항목 추가
                     </Button>
                 </Link>
             </div>
+
+            {/* Decision Execution Card (Danger Alert) */}
+            {upcoming.find(c => getUrgencyLevel(getDaysUntil(c.expires_at)) === 'danger') && (
+                <div className="space-y-4">
+                    <h2 className="text-sm font-black uppercase tracking-widest text-orange-500">긴급 결정 필요</h2>
+                    <CancellationExecutionCard
+                        contract={upcoming.find(c => getUrgencyLevel(getDaysUntil(c.expires_at)) === 'danger')!}
+                        exchangeRate={summary?.exchangeRate}
+                    />
+                </div>
+            )}
 
             {/* Summary Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

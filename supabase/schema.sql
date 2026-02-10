@@ -9,7 +9,8 @@ CREATE TABLE IF NOT EXISTS public.users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email VARCHAR(255) NOT NULL,
   name VARCHAR(100),
-  plan VARCHAR(10) NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'pro')),
+  plan VARCHAR(10) NOT NULL DEFAULT 'free' CHECK (plan IN ('free', 'core', 'growth')),
+  total_saved_krw DECIMAL(12,2) DEFAULT 0,
   plan_expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -28,6 +29,7 @@ CREATE TABLE IF NOT EXISTS public.contracts (
   auto_renew BOOLEAN NOT NULL DEFAULT false,
   notice_days INTEGER NOT NULL DEFAULT 30,
   status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'renewed', 'terminated')),
+  saved_amount DECIMAL(12,2),
   memo TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -40,6 +42,18 @@ CREATE TABLE IF NOT EXISTS public.notification_logs (
   type VARCHAR(5) NOT NULL CHECK (type IN ('90d', '30d', '7d', '1d')),
   sent_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   status VARCHAR(10) NOT NULL DEFAULT 'sent' CHECK (status IN ('sent', 'failed'))
+);
+
+-- Cancellation Intelligence table
+CREATE TABLE IF NOT EXISTS public.cancellation_guides (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  service_name VARCHAR(100) UNIQUE NOT NULL,
+  cancellation_url TEXT,
+  notice_period_days INTEGER DEFAULT 0,
+  steps TEXT,
+  penalty_notes TEXT,
+  is_annual_only BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Indexes
@@ -85,6 +99,11 @@ CREATE POLICY "Users can view own notification logs" ON public.notification_logs
       AND contracts.user_id = auth.uid()
     )
   );
+
+-- Cancellation Guides policies
+ALTER TABLE public.cancellation_guides ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read access for cancellation guides" ON public.cancellation_guides
+  FOR SELECT USING (true);
 
 -- Function to auto-create user profile on signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
