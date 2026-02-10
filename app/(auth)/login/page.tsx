@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,14 +11,22 @@ import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-export default function LoginPage() {
+function LoginContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const supabase = createClient();
     const { addToast } = useToast();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isDemoLoading, setIsDemoLoading] = useState(false);
+
+    // Auto-trigger demo login if query param is present
+    useEffect(() => {
+        if (searchParams.get('auto_demo') === 'true') {
+            handleDemoLogin();
+        }
+    }, [searchParams]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -76,21 +84,34 @@ export default function LoginPage() {
             });
 
             if (signUpError) {
-                addToast('error', '데모 계정 생성에 실패했습니다. 관리자에게 문의하세요.');
-                setIsDemoLoading(false);
-                return;
-            }
-
-            // Try login again after signup
-            const { error: retryError } = await supabase.auth.signInWithPassword({
-                email: demoEmail,
-                password: demoPassword,
-            });
-
-            if (retryError) {
-                addToast('error', '데모 로그인 재시도 실패.');
-                setIsDemoLoading(false);
-                return;
+                // If signup fails because user exists (race condition or weird state), try login again
+                if (signUpError.message.includes('already registered')) {
+                    const { error: retryError } = await supabase.auth.signInWithPassword({
+                        email: demoEmail,
+                        password: demoPassword,
+                    });
+                    if (retryError) {
+                        addToast('error', '데모 로그인 실패. 관리자에게 문의하세요.');
+                        setIsDemoLoading(false);
+                        return;
+                    }
+                } else {
+                    addToast('error', '데모 계정 생성에 실패했습니다. 관리자에게 문의하세요.');
+                    setIsDemoLoading(false);
+                    return;
+                }
+            } else {
+                // Try login again after signup just to be sure session is set or handle auto-login behavior
+                const { error: retryError } = await supabase.auth.signInWithPassword({
+                    email: demoEmail,
+                    password: demoPassword,
+                });
+                if (retryError) {
+                    // Sometimes signup auto-logs in depending on config, but explicit login is safer
+                    addToast('error', '데모 로그인 재시도 실패.');
+                    setIsDemoLoading(false);
+                    return;
+                }
             }
         }
 
@@ -102,13 +123,13 @@ export default function LoginPage() {
     return (
         <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="text-center">
-                <h2 className="text-3xl font-bold tracking-tight text-white">로그인</h2>
-                <p className="mt-2 text-sm text-slate-400">
+                <h2 className="text-3xl font-bold tracking-tight text-foreground">로그인</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
                     계약 관리의 시작, 갱신알림
                 </p>
             </div>
 
-            <Card className="p-8 backdrop-blur-xl bg-slate-900/50 border-slate-800 shadow-2xl">
+            <Card className="p-8 backdrop-blur-xl bg-card border-border shadow-2xl">
                 <form onSubmit={handleLogin} className="space-y-6">
                     <Input
                         id="email"
@@ -118,7 +139,7 @@ export default function LoginPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="bg-slate-950/50 border-slate-800 focus:border-blue-500/50"
+                        className="bg-background border-input"
                     />
 
                     <div className="space-y-1">
@@ -130,25 +151,25 @@ export default function LoginPage() {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            className="bg-slate-950/50 border-slate-800 focus:border-blue-500/50"
+                            className="bg-background border-input"
                         />
                         <div className="text-right">
-                            <Link href="#" className="text-xs text-blue-400 hover:text-blue-300">
+                            <Link href="#" className="text-xs text-primary hover:text-primary/80">
                                 비밀번호를 잊으셨나요?
                             </Link>
                         </div>
                     </div>
 
-                    <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/20" isLoading={isLoading}>
+                    <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20" isLoading={isLoading}>
                         이메일로 로그인
                     </Button>
 
                     <div className="relative">
                         <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-slate-700" />
+                            <span className="w-full border-t border-border" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-slate-900 px-2 text-slate-500">
+                            <span className="bg-card px-2 text-muted-foreground">
                                 또는
                             </span>
                         </div>
@@ -183,10 +204,10 @@ export default function LoginPage() {
 
                     <div className="relative">
                         <div className="absolute inset-0 flex items-center">
-                            <span className="w-full border-t border-slate-700" />
+                            <span className="w-full border-t border-border" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-slate-900 px-2 text-slate-500">
+                            <span className="bg-card px-2 text-muted-foreground">
                                 테스트를 원하시나요?
                             </span>
                         </div>
@@ -196,7 +217,7 @@ export default function LoginPage() {
                         type="button"
                         variant="outline"
                         onClick={handleDemoLogin}
-                        className="w-full border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800"
+                        className="w-full border-border text-muted-foreground hover:text-foreground hover:bg-accent"
                         isLoading={isDemoLoading}
                     >
                         🚀 회원가입 없이 체험하기 (Demo)
@@ -204,15 +225,23 @@ export default function LoginPage() {
                 </form>
             </Card>
 
-            <p className="px-8 text-center text-sm text-slate-400">
+            <p className="px-8 text-center text-sm text-muted-foreground">
                 계정이 없으신가요?{' '}
                 <Link
                     href="/signup"
-                    className="hover:text-blue-400 underline underline-offset-4 transition-colors"
+                    className="hover:text-primary underline underline-offset-4 transition-colors"
                 >
                     회원가입
                 </Link>
             </p>
         </div>
     );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div className="text-white">Loading...</div>}>
+            <LoginContent />
+        </Suspense>
+    )
 }

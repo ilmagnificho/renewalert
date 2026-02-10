@@ -58,8 +58,49 @@
   }
 }
 
+/* Light Theme (Default) */
 :root {
-  /* Rich Dark Theme Palette based on Slate */
+  --background: #ffffff;
+  --foreground: #0f172a;
+  /* Slate 950 */
+
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+
+  --primary: #2563eb;
+  /* Blue 600 */
+  --primary-foreground: #ffffff;
+
+  --secondary: #f1f5f9;
+  /* Slate 100 */
+  --secondary-foreground: #0f172a;
+
+  --muted: #f1f5f9;
+  /* Slate 100 */
+  --muted-foreground: #64748b;
+  /* Slate 500 */
+
+  --accent: #f1f5f9;
+  /* Slate 100 */
+  --accent-foreground: #0f172a;
+
+  --destructive: #ef4444;
+  /* Red 500 */
+  --destructive-foreground: #ffffff;
+
+  --border: #e2e8f0;
+  /* Slate 200 */
+  --input: #e2e8f0;
+  --ring: #2563eb;
+
+  --radius: 0.75rem;
+}
+
+/* Dark Theme */
+.dark {
   --background: #0f172a;
   /* Slate 900 */
   --foreground: #f8fafc;
@@ -94,10 +135,7 @@
   --border: #1e293b;
   /* Slate 800 */
   --input: #1e293b;
-  --ring: #2563eb;
-  /* Blue 600 */
-
-  --radius: 0.75rem;
+  --ring: #3b82f6;
 }
 
 @layer base {
@@ -106,7 +144,7 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased selection:bg-primary/30;
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 dark:selection:bg-primary/30;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";
   }
 
@@ -121,7 +159,7 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-700/50 rounded-full hover:bg-slate-600/80 transition-colors;
+    @apply bg-gray-300/50 rounded-full hover:bg-gray-400/80 transition-colors dark:bg-slate-700/50 dark:hover:bg-slate-600/80;
   }
 }
 
@@ -130,12 +168,12 @@
     text-wrap: balance;
   }
 
-  /* Glassmorphism */
+  /* Glassmorphism - Light Mode */
   .glass {
-    @apply bg-slate-900/70 backdrop-blur-lg border border-white/10;
+    @apply bg-white/70 backdrop-blur-lg border border-gray-200 dark:bg-slate-900/70 dark:border-white/10;
   }
 
   .glass-card {
-    @apply bg-slate-800/40 backdrop-blur-md border border-white/5 shadow-xl;
+    @apply bg-white/40 backdrop-blur-md border border-gray-100 shadow-xl dark:bg-slate-800/40 dark:border-white/5;
   }
 }
