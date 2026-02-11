@@ -264,11 +264,57 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Trust Section */}
+      <section className="py-28 px-6 z-10">
+        <div className="max-w-6xl mx-auto rounded-[2.5rem] border border-white/10 bg-zinc-950/70 p-10 sm:p-14">
+          <div className="text-center mb-14">
+            <p className="text-[10px] font-black uppercase tracking-[0.35em] text-zinc-500 mb-4">Trust Layer for B2B Teams</p>
+            <h2 className="text-3xl sm:text-4xl font-black text-white mb-5 tracking-tight">도입 전에 확인하는 신뢰 기준</h2>
+            <p className="text-zinc-400 font-medium">보안·운영·지원·계약 조건까지 도입 리스크를 줄이는 기준을 공개합니다.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <article className="rounded-2xl border border-white/10 bg-black/40 p-6 space-y-3">
+              <h3 className="text-white font-black text-lg">데이터 보관 방식</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">조직 단위로 데이터를 분리해 저장하고, 계약 이력은 암호화된 상태로 보관합니다.</p>
+            </article>
+            <article className="rounded-2xl border border-white/10 bg-black/40 p-6 space-y-3">
+              <h3 className="text-white font-black text-lg">권한/조직 관리</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">관리자·운영자 권한을 구분하고, 멤버 초대/회수 기록으로 책임 소재를 명확히 합니다.</p>
+            </article>
+            <article className="rounded-2xl border border-white/10 bg-black/40 p-6 space-y-3">
+              <h3 className="text-white font-black text-lg">온보딩 시간</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">핵심 계약 10건 기준 평균 30분 내 셋업을 완료하고 첫 알림 정책을 활성화합니다.</p>
+            </article>
+            <article className="rounded-2xl border border-white/10 bg-black/40 p-6 space-y-3">
+              <h3 className="text-white font-black text-lg">고객지원 SLA</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">영업일 기준 4시간 내 1차 응답을 보장하며, 중요 이슈는 우선 대응 채널로 처리합니다.</p>
+            </article>
+            <article className="rounded-2xl border border-white/10 bg-black/40 p-6 space-y-3">
+              <h3 className="text-white font-black text-lg">환불/체험 정책</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">유료 전환 전 무료 체험으로 적합성을 검증하고, 초기 도입 단계 환불 정책을 제공합니다.</p>
+            </article>
+            <article className="rounded-2xl border border-white/10 bg-black/40 p-6 space-y-3">
+              <h3 className="text-white font-black text-lg">보안/감사 대응</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">요청 시 조직별 운영 로그를 제공해 내부 감사 및 구매 심의를 빠르게 지원합니다.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing ROI Section */}
       <section className="py-32 px-6 z-10">
         <div className="max-w-6xl mx-auto text-center mb-20">
           <h2 className="text-3xl font-black text-white mb-6 tracking-tighter uppercase">ROI Based Pricing</h2>
           <p className="text-zinc-500 font-medium">한 번의 올바른 해지 결정은 수십 개월 치의 구독료를 즉시 회수합니다.</p>
+        </div>
+
+        <div className="max-w-6xl mx-auto mb-12 px-4">
+          <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 py-4 px-6 text-center">
+            <p className="text-emerald-200 font-bold text-sm sm:text-base">
+              도입 리스크 제로 · 무료 시작 · 카드 등록 불필요 · 언제든 해지
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch">
@@ -397,17 +443,34 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="py-20 px-6 border-t border-white/5 relative z-10">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 items-start">
+          <div className="flex items-center gap-3 md:justify-start justify-center">
             <div className="w-7 h-7 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center">
               <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
               </svg>
             </div>
-            <span className="text-zinc-500 font-black tracking-tighter text-sm px-1 italic">RenewAlert</span>
+            <div className="text-center md:text-left">
+              <span className="block text-zinc-500 font-black tracking-tighter text-sm px-1 italic">RenewAlert</span>
+              <p className="text-zinc-600 text-xs mt-1">RenewAlert Inc. · 서울특별시 강남구 테헤란로 123</p>
+            </div>
           </div>
-          <div className="text-zinc-700 text-[9px] uppercase font-black tracking-[0.3em]">
-            © 2025 RenewAlert Global · Built for Operators
+
+          <div className="text-center md:text-left space-y-2">
+            <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em]">Contact</p>
+            <p className="text-zinc-400 text-sm">sales@renewalert.ai</p>
+            <p className="text-zinc-400 text-sm">카카오톡 채널 · @renewalert</p>
+            <p className="text-zinc-400 text-sm">고객지원: 평일 09:00 - 18:00 (KST)</p>
+          </div>
+
+          <div className="text-center md:text-right space-y-3">
+            <div className="flex items-center justify-center md:justify-end gap-4 text-sm">
+              <Link href="/terms" className="text-zinc-400 hover:text-white transition-colors">이용약관</Link>
+              <Link href="/privacy" className="text-zinc-400 hover:text-white transition-colors">개인정보처리방침</Link>
+            </div>
+            <div className="text-zinc-700 text-[9px] uppercase font-black tracking-[0.3em]">
+              © 2025 RenewAlert Global · Built for Operators
+            </div>
           </div>
         </div>
       </footer>
