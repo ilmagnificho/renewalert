@@ -12,6 +12,11 @@ type DisplayContract = {
   cycle: 'monthly' | 'yearly';
 };
 
+
+const hasSupabaseConfig = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+);
+
 const INDUSTRY_PROFILES: Record<string, { label: string; split: Array<{ name: string; ratio: number; cycle: 'monthly' | 'yearly' }> }> = {
   saas: {
     label: 'SaaS/IT',
@@ -61,50 +66,63 @@ export default function LandingPage() {
 
   useEffect(() => {
     async function loadContractsForSession() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
+      if (!hasSupabaseConfig) {
         setIsAccountSession(false);
         setAccountContracts([]);
         setLastSyncedAt(null);
         return;
       }
 
-      setIsAccountSession(true);
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
 
-      const { data: contracts } = await supabase
-        .from('contracts')
-        .select('name, amount, currency, cycle, updated_at')
-        .eq('status', 'active')
-        .order('updated_at', { ascending: false });
+        if (!user) {
+          setIsAccountSession(false);
+          setAccountContracts([]);
+          setLastSyncedAt(null);
+          return;
+        }
 
-      if (!contracts || contracts.length === 0) {
+        setIsAccountSession(true);
+
+        const { data: contracts } = await supabase
+          .from('contracts')
+          .select('name, amount, currency, cycle, updated_at')
+          .eq('status', 'active')
+          .order('updated_at', { ascending: false });
+
+        if (!contracts || contracts.length === 0) {
+          setAccountContracts([]);
+          setLastSyncedAt(new Date().toLocaleString('ko-KR'));
+          return;
+        }
+
+        const normalized = contracts
+          .filter((contract) => contract.cycle === 'monthly' || contract.cycle === 'yearly')
+          .sort((a, b) => {
+            const aYearly = a.cycle === 'monthly' ? a.amount * 12 : a.amount;
+            const bYearly = b.cycle === 'monthly' ? b.amount * 12 : b.amount;
+            return bYearly - aYearly;
+          })
+          .slice(0, 3)
+          .map((contract) => ({
+            name: contract.name,
+            amount: contract.amount,
+            currency: contract.currency || 'KRW',
+            cycle: contract.cycle,
+          }));
+
+        setAccountContracts(normalized);
+        const mostRecent = contracts[0]?.updated_at;
+        setLastSyncedAt(
+          mostRecent ? new Date(mostRecent).toLocaleString('ko-KR') : new Date().toLocaleString('ko-KR'),
+        );
+      } catch {
+        setIsAccountSession(false);
         setAccountContracts([]);
-        setLastSyncedAt(new Date().toLocaleString('ko-KR'));
-        return;
+        setLastSyncedAt(null);
       }
-
-      const normalized = contracts
-        .filter((contract) => contract.cycle === 'monthly' || contract.cycle === 'yearly')
-        .sort((a, b) => {
-          const aYearly = a.cycle === 'monthly' ? a.amount * 12 : a.amount;
-          const bYearly = b.cycle === 'monthly' ? b.amount * 12 : b.amount;
-          return bYearly - aYearly;
-        })
-        .slice(0, 3)
-        .map((contract) => ({
-          name: contract.name,
-          amount: contract.amount,
-          currency: contract.currency || 'KRW',
-          cycle: contract.cycle,
-        }));
-
-      setAccountContracts(normalized);
-      const mostRecent = contracts[0]?.updated_at;
-      setLastSyncedAt(
-        mostRecent ? new Date(mostRecent).toLocaleString('ko-KR') : new Date().toLocaleString('ko-KR'),
-      );
     }
 
     void loadContractsForSession();
