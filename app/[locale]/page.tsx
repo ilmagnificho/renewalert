@@ -1,13 +1,19 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 import { ShockTrigger } from '@/components/dashboard/shock-trigger';
 
 export default function LandingPage() {
   const [employees, setEmployees] = useState(12);
   const [tools, setTools] = useState(8);
   const [spend, setSpend] = useState(45000);
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactCompany, setContactCompany] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [isSubmittingLead, setIsSubmittingLead] = useState(false);
+  const [leadStatus, setLeadStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const monthlySpend = employees * tools * spend;
   const yearlySpend = monthlySpend * 12;
@@ -19,6 +25,53 @@ export default function LandingPage() {
     { name: 'Figma', amount: 2340000, currency: 'KRW', cycle: 'yearly' },
     { name: 'Slack', amount: 1920000, currency: 'KRW', cycle: 'yearly' },
   ];
+
+  const submitLead = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    setLeadStatus(null);
+    setIsSubmittingLead(true);
+
+    try {
+      const response = await fetch('/api/sales-leads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          eventType: 'sales_consultation_requested',
+          source: 'landing_consultation_form',
+          lead: {
+            name: contactName,
+            email: contactEmail,
+            company: contactCompany,
+            message: contactMessage,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('lead_submit_failed');
+      }
+
+      setLeadStatus({
+        type: 'success',
+        message: '상담 요청이 접수되었습니다. 영업팀이 빠르게 연락드릴게요.',
+      });
+
+      setContactName('');
+      setContactEmail('');
+      setContactCompany('');
+      setContactMessage('');
+    } catch {
+      setLeadStatus({
+        type: 'error',
+        message: '요청 전송에 실패했습니다. support@renewalert.com 으로 문의 부탁드립니다.',
+      });
+    } finally {
+      setIsSubmittingLead(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#000000] text-foreground overflow-x-hidden selection:bg-white selection:text-black font-sans">
@@ -76,12 +129,24 @@ export default function LandingPage() {
           <p className="text-lg sm:text-2xl text-zinc-500 max-w-3xl mx-auto mb-12 leading-relaxed px-4 font-medium">
             깜빡하면 오늘도 쓰지 않는 서비스에 30만원이 결제됩니다.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 w-full max-w-3xl mx-auto">
             <Link
               href="/login?auto_demo=true"
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-black font-black px-10 py-5 rounded-2xl hover:bg-zinc-200 transition-all duration-300 text-xl shadow-2xl shadow-white/10"
             >
-              불필요한 비용 절감하기
+              바로 체험
+            </Link>
+            <Link
+              href="#consultation-form"
+              className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-zinc-700 text-white font-black px-10 py-5 rounded-2xl hover:border-zinc-400 hover:bg-zinc-900/50 transition-all duration-300 text-xl"
+            >
+              도입 상담/견적 요청
+            </Link>
+            <Link
+              href="/sample-dashboard"
+              className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-zinc-800 text-zinc-300 font-black px-8 py-5 rounded-2xl hover:text-white hover:border-zinc-500 transition-all duration-300 text-lg"
+            >
+              제품 둘러보기(샘플 대시보드)
             </Link>
           </div>
           <p className="mt-8 text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">
@@ -165,7 +230,7 @@ export default function LandingPage() {
             </div>
 
             <Link
-              href="/login"
+              href="/login?auto_demo=true"
               className="inline-flex items-center justify-center gap-2 bg-white text-black font-black px-12 py-5 rounded-2xl hover:bg-zinc-200 transition-all duration-300 text-xl"
             >
               지금 비용 누수 점검하기
@@ -246,8 +311,72 @@ export default function LandingPage() {
               <li className="flex items-center gap-2">✔ 조직 가시성 & 관리자 권한</li>
               <li className="flex items-center gap-2">✔ 우선 순위 기술 지원</li>
             </ul>
-            <Link href="/login" className="w-full py-4 rounded-xl border border-zinc-800 text-zinc-400 font-black hover:text-white transition-colors text-sm text-center">문의하기</Link>
+            <Link href="#consultation-form" className="w-full py-4 rounded-xl border border-zinc-800 text-zinc-400 font-black hover:text-white transition-colors text-sm text-center">상담 요청하기</Link>
           </div>
+        </div>
+      </section>
+
+      <section id="consultation-form" className="py-28 px-6 z-10">
+        <div className="max-w-4xl mx-auto rounded-[2.5rem] border border-white/10 bg-zinc-950/80 p-10 sm:p-14">
+          <div className="text-center mb-12">
+            <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">B2B Sales Pipeline</p>
+            <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">도입 상담/견적 요청</h2>
+            <p className="text-zinc-400 font-medium">Growth/Enterprise 도입 검토를 위한 상담 일정을 바로 잡아드립니다.</p>
+          </div>
+
+          <form onSubmit={submitLead} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <input
+                required
+                value={contactName}
+                onChange={(event) => setContactName(event.target.value)}
+                placeholder="이름"
+                className="w-full px-5 py-4 rounded-xl bg-black border border-zinc-800 text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500"
+              />
+              <input
+                required
+                type="email"
+                value={contactEmail}
+                onChange={(event) => setContactEmail(event.target.value)}
+                placeholder="회사 이메일"
+                className="w-full px-5 py-4 rounded-xl bg-black border border-zinc-800 text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500"
+              />
+            </div>
+
+            <input
+              required
+              value={contactCompany}
+              onChange={(event) => setContactCompany(event.target.value)}
+              placeholder="회사명"
+              className="w-full px-5 py-4 rounded-xl bg-black border border-zinc-800 text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500"
+            />
+
+            <textarea
+              rows={4}
+              value={contactMessage}
+              onChange={(event) => setContactMessage(event.target.value)}
+              placeholder="현재 관리 중인 구독 수, 필요한 기능, 희망 일정 등을 알려주세요."
+              className="w-full px-5 py-4 rounded-xl bg-black border border-zinc-800 text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500"
+            />
+
+            <button
+              type="submit"
+              disabled={isSubmittingLead}
+              className="w-full py-5 rounded-xl bg-white text-black font-black hover:bg-zinc-200 transition-colors disabled:opacity-60"
+            >
+              {isSubmittingLead ? '요청 전송 중...' : '상담 요청 보내기'}
+            </button>
+
+            {leadStatus && (
+              <p className={`text-sm font-semibold ${leadStatus.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+                {leadStatus.message}
+              </p>
+            )}
+
+            <p className="text-zinc-500 text-xs">
+              폼 제출 이벤트는 세일즈 파이프라인으로 자동 전달되어 담당자가 확인합니다.
+            </p>
+          </form>
         </div>
       </section>
 
