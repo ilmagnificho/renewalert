@@ -4,8 +4,9 @@ import { revokeInvitation } from '@/lib/invitations';
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -25,7 +26,7 @@ export async function DELETE(
     }
 
     try {
-        await revokeInvitation(params.id);
+        await revokeInvitation(id);
         return NextResponse.json({ success: true });
     } catch (e: any) {
         return NextResponse.json({ error: e.message }, { status: 500 });

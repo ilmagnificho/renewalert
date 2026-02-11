@@ -9,11 +9,7 @@ export function useContracts() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (!organization) {
-            setContracts([]);
-            setIsLoading(false);
-            return;
-        }
+        if (!organization) return;
 
         async function fetchContracts() {
             const supabase = createClient();
@@ -21,7 +17,7 @@ export function useContracts() {
             const { data, error } = await supabase
                 .from('contracts')
                 .select('*')
-                .eq('organization_id', organization.id)
+                .eq('organization_id', organization!.id)
                 .order('expires_at', { ascending: true });
 
             if (data) {

@@ -4,8 +4,9 @@ import { isSuperAdmin } from '@/lib/admin';
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
+    const { id } = await params;
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -25,7 +26,7 @@ export async function GET(
             members:organization_members(*, user:users(id, email, name)),
             contracts:contracts(*)
         `)
-        .eq('id', params.id)
+        .eq('id', id)
         .single();
 
     if (error) {

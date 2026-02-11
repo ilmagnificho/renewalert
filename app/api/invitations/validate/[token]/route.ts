@@ -3,15 +3,16 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET(
     request: Request,
-    { params }: { params: { token: string } }
+    { params }: { params: Promise<{ token: string }> }
 ) {
+    const { token } = await params;
     const supabase = createAdminClient();
 
     // Fetch invitation with organization name
     const { data, error } = await supabase
         .from('invitations')
         .select('email, role, organization:organizations(name), expires_at, accepted_at')
-        .eq('token', params.token)
+        .eq('token', token)
         .single();
 
     if (error || !data) {
