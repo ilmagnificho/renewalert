@@ -2,10 +2,9 @@ import { type NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 import createMiddleware from 'next-intl/middleware';
 
-const intlMiddleware = createMiddleware({
-    locales: ['en', 'ko'],
-    defaultLocale: 'ko'
-});
+import { routing } from '@/i18n/navigation';
+
+const intlMiddleware = createMiddleware(routing);
 
 export async function middleware(request: NextRequest) {
     // 1. Run Auth Middleware
