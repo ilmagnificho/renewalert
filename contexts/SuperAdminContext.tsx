@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, hasSupabaseBrowserEnv } from '@/lib/supabase/client';
 
 interface SuperAdminContextType {
     isSuperAdmin: boolean;
@@ -16,14 +16,10 @@ const SuperAdminContext = createContext<SuperAdminContextType>({
 export function SuperAdminProvider({ children }: { children: React.ReactNode }) {
     const [isSuperAdmin, setIsSuperAdmin] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const supabase = createClient();
 
-    useEffect(() => {
-        checkStatus();
-    }, []);
-
-    const checkStatus = async () => {
+    async function checkStatus() {
         try {
+            const supabase = createClient();
             const { data: { user } } = await supabase.auth.getUser();
             if (user) {
                 const res = await fetch('/api/admin/check');
@@ -37,7 +33,16 @@ export function SuperAdminProvider({ children }: { children: React.ReactNode }) 
         } finally {
             setIsLoading(false);
         }
-    };
+    }
+
+    useEffect(() => {
+        if (!hasSupabaseBrowserEnv()) {
+            setIsLoading(false);
+            return;
+        }
+
+        void checkStatus();
+    }, []);
 
     return (
         <SuperAdminContext.Provider value={{ isSuperAdmin, isLoading }}>

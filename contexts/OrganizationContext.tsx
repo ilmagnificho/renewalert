@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, hasSupabaseBrowserEnv } from '@/lib/supabase/client';
 import { Organization } from '@/types/database';
 
 type OrganizationMemberRow = {
@@ -46,6 +46,13 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
     const [isLoading, setIsLoading] = useState(true);
 
     const fetchOrganization = async () => {
+        if (!hasSupabaseBrowserEnv()) {
+            setOrganization(null);
+            setRole(null);
+            setIsLoading(false);
+            return;
+        }
+
         const supabase = createClient();
 
         const { data: { user } } = await supabase.auth.getUser();
