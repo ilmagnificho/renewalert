@@ -6,22 +6,31 @@ import { routing } from '@/i18n/navigation';
 
 const intlMiddleware = createMiddleware(routing);
 
-export async function middleware(request: NextRequest) {
-    // 1. Run Auth Middleware
-    // This handles session refresh and protected route redirects
-    const response = await updateSession(request);
+function shouldRunIntl(pathname: string) {
+    if (pathname === '/') return true;
+    if (pathname === '/en' || pathname === '/ko') return true;
+    if (pathname.startsWith('/en/') || pathname.startsWith('/ko/')) return true;
+    return false;
+}
 
-    // If auth middleware returned a redirect or error, stop here
-    if (response.status >= 300 && response.status < 400) {
-        return response;
+export async function middleware(request: NextRequest) {
+    // 1) Always run auth/session middleware first.
+    const authResponse = await updateSession(request);
+
+    // Respect redirects from auth middleware.
+    if (authResponse.status >= 300 && authResponse.status < 400) {
+        return authResponse;
     }
 
-    // 2. Run Intl Middleware
-    // This handles locale routing and prefixes
+    // 2) Run intl middleware only on locale-aware routes.
+    if (!shouldRunIntl(request.nextUrl.pathname)) {
+        return authResponse;
+    }
+
     const intlResponse = intlMiddleware(request);
 
-    // Copy cookies from auth response (session refresh) to intl response
-    response.cookies.getAll().forEach((cookie) => {
+    // Preserve cookies set by auth middleware.
+    authResponse.cookies.getAll().forEach((cookie) => {
         intlResponse.cookies.set(cookie.name, cookie.value);
     });
 
@@ -29,5 +38,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/((?!api|_next|.*\\..*).*)']
+    matcher: ['/((?!api|_next|.*\..*).*)']
 };

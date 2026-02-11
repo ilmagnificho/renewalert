@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Organization, OrganizationMember } from '@/types/database';
+import { Organization } from '@/types/database';
 
 interface OrganizationContextType {
     organization: Organization | null;
@@ -34,7 +34,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
             return;
         }
 
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from('organization_members')
             .select(`
         role,
@@ -43,15 +43,32 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
             .eq('user_id', user.id)
             .single();
 
+        if (error) {
+            // Backward compatibility: org tables may not exist yet in some environments.
+            if (error.code === '42P01') {
+                setOrganization(null);
+                setRole(null);
+                setIsLoading(false);
+                return;
+            }
+
+            setIsLoading(false);
+            return;
+        }
+
         if (data) {
-            setOrganization(data.organization as any as Organization);
+            setOrganization(data.organization as Organization);
             setRole(data.role as 'owner' | 'admin' | 'member');
         }
         setIsLoading(false);
     };
 
     useEffect(() => {
-        fetchOrganization();
+        const timer = setTimeout(() => {
+            void fetchOrganization();
+        }, 0);
+
+        return () => clearTimeout(timer);
     }, []);
 
     const isAdmin = role === 'owner' || role === 'admin';
