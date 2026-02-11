@@ -405,6 +405,7 @@ export default function LandingPage() {
           }
           assumptionsText={isSimulation ? assumptionsText : undefined}
           lastSyncedAt={!isSimulation ? lastSyncedAt || undefined : undefined}
+          locale={isEnglish ? "en" : "ko"}
         />
       </section>
 
