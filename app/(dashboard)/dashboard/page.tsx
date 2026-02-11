@@ -10,6 +10,7 @@ import { CancellationExecutionCard } from '@/components/contracts/execution-card
 import { useExchangeRate } from '@/hooks/use-exchange-rate';
 import { useContracts } from '@/hooks/use-contracts';
 import { useOrganization } from '@/contexts/OrganizationContext';
+import type { Contract } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,11 +97,6 @@ export default function DashboardPage() {
         );
     }
 
-    if (!organization) {
-        // Should not happen if OrganizationProvider handles loading properly, but good fallback
-        // Or if new user has no org (already handled by signup flow, but robust)
-        return <div>Organization not found.</div>;
-    }
 
     return (
         <div className="space-y-10 animate-fade-in w-full pb-20">
@@ -143,7 +139,7 @@ export default function DashboardPage() {
 
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-foreground">반가워요, {organization.name} 팀 👋</h1>
+                    <h1 className="text-2xl font-bold text-foreground">반가워요{organization?.name ? `, ${organization.name} 팀` : ''} 👋</h1>
                     <p className="text-sm text-muted-foreground mt-1">오늘 확인해야 할 계약 현황입니다.</p>
                 </div>
                 {isAdmin && (
@@ -278,7 +274,7 @@ export default function DashboardPage() {
                         {upcoming.map((contract) => (
                             <ContractCard
                                 key={contract.id}
-                                contract={contract as any} // contract type mismatch possible, casting
+                                contract={contract as Contract}
                                 exchangeRate={exchangeRate}
                             />
                         ))}

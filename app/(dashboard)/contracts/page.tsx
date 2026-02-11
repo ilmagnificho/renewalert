@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Contract, DashboardSummary } from '@/types';
+import { Contract } from '@/types';
 import { ContractCard } from '@/components/contracts/contract-card';
 import { Button } from '@/components/ui/button';
 import { Input, Select } from '@/components/ui/input';
@@ -115,9 +115,6 @@ export default function ContractsPage() {
         );
     }
 
-    if (!organization) {
-        return <div className="p-8 text-center text-muted-foreground">로그인이 필요하거나 소속된 조직이 없습니다.</div>;
-    }
 
     return (
         <div className="space-y-8 animate-fade-in pb-20">
@@ -126,7 +123,7 @@ export default function ContractsPage() {
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">계약 관리</h1>
                     <p className="text-sm text-muted-foreground mt-1">
-                        {organization.name} 팀의 등록된 계약 {contracts.length}개
+{organization ? `${organization.name} 팀의 등록된 계약 ${contracts.length}개` : `등록된 계약 ${contracts.length}개`}
                     </p>
                 </div>
                 {isAdmin && (
@@ -276,7 +273,7 @@ export default function ContractsPage() {
                     {filteredContracts.map((contract) => (
                         <ContractCard
                             key={contract.id}
-                            contract={contract as any} // contract type mismatch possible, casting
+                            contract={contract as Contract}
                             exchangeRate={exchangeRate}
                         />
                     ))}
