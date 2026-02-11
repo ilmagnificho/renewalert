@@ -4,6 +4,11 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Organization } from '@/types/database';
 
+type OrganizationMemberRow = {
+    role: 'owner' | 'admin' | 'member';
+    organization: Organization | Organization[] | null;
+};
+
 interface OrganizationContextType {
     organization: Organization | null;
     role: 'owner' | 'admin' | 'member' | null;
@@ -41,7 +46,7 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         organization:organizations(*)
       `)
             .eq('user_id', user.id)
-            .single();
+            .single<OrganizationMemberRow>();
 
         if (error) {
             // Backward compatibility: org tables may not exist yet in some environments.
@@ -57,7 +62,11 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
         }
 
         if (data) {
-            setOrganization(data.organization as Organization);
+            const organization = Array.isArray(data.organization)
+                ? data.organization[0] ?? null
+                : data.organization;
+
+            setOrganization(organization);
             setRole(data.role as 'owner' | 'admin' | 'member');
         }
         setIsLoading(false);
