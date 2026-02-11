@@ -1,10 +1,46 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { ShockTrigger } from '@/components/dashboard/shock-trigger';
+import { createClient } from '@/lib/supabase/client';
+
+type DisplayContract = {
+  name: string;
+  amount: number;
+  currency: string;
+  cycle: 'monthly' | 'yearly';
+};
+
+const INDUSTRY_PROFILES: Record<string, { label: string; split: Array<{ name: string; ratio: number; cycle: 'monthly' | 'yearly' }> }> = {
+  saas: {
+    label: 'SaaS/IT',
+    split: [
+      { name: '클라우드 인프라 (예시)', ratio: 0.45, cycle: 'yearly' },
+      { name: '협업/디자인 툴 (예시)', ratio: 0.32, cycle: 'yearly' },
+      { name: '보안/분석 툴 (예시)', ratio: 0.23, cycle: 'yearly' },
+    ],
+  },
+  commerce: {
+    label: '이커머스/리테일',
+    split: [
+      { name: '마케팅 자동화 (예시)', ratio: 0.4, cycle: 'yearly' },
+      { name: 'CS/운영 툴 (예시)', ratio: 0.35, cycle: 'yearly' },
+      { name: '분석/리포팅 툴 (예시)', ratio: 0.25, cycle: 'yearly' },
+    ],
+  },
+  agency: {
+    label: '에이전시/서비스업',
+    split: [
+      { name: '프로젝트 협업 툴 (예시)', ratio: 0.38, cycle: 'yearly' },
+      { name: '문서/커뮤니케이션 툴 (예시)', ratio: 0.34, cycle: 'yearly' },
+      { name: '회계/업무 자동화 툴 (예시)', ratio: 0.28, cycle: 'yearly' },
+    ],
+  },
+};
 
 export default function LandingPage() {
+  const [industry, setIndustry] = useState<'saas' | 'commerce' | 'agency'>('saas');
   const [employees, setEmployees] = useState(12);
   const [tools, setTools] = useState(8);
   const [spend, setSpend] = useState(45000);
@@ -14,17 +50,79 @@ export default function LandingPage() {
   const [contactMessage, setContactMessage] = useState('');
   const [isSubmittingLead, setIsSubmittingLead] = useState(false);
   const [leadStatus, setLeadStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [accountContracts, setAccountContracts] = useState<DisplayContract[]>([]);
+  const [isAccountSession, setIsAccountSession] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
 
   const monthlySpend = employees * tools * spend;
   const yearlySpend = monthlySpend * 12;
   const recoverableSpendMin = yearlySpend * 0.15;
   const recoverableSpendMax = yearlySpend * 0.35;
 
-  const mockAtRisk = [
-    { name: 'AWS', amount: 4800000, currency: 'KRW', cycle: 'yearly' },
-    { name: 'Figma', amount: 2340000, currency: 'KRW', cycle: 'yearly' },
-    { name: 'Slack', amount: 1920000, currency: 'KRW', cycle: 'yearly' },
-  ];
+  useEffect(() => {
+    async function loadContractsForSession() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        setIsAccountSession(false);
+        setAccountContracts([]);
+        setLastSyncedAt(null);
+        return;
+      }
+
+      setIsAccountSession(true);
+
+      const { data: contracts } = await supabase
+        .from('contracts')
+        .select('name, amount, currency, cycle, updated_at')
+        .eq('status', 'active')
+        .order('updated_at', { ascending: false });
+
+      if (!contracts || contracts.length === 0) {
+        setAccountContracts([]);
+        setLastSyncedAt(new Date().toLocaleString('ko-KR'));
+        return;
+      }
+
+      const normalized = contracts
+        .filter((contract) => contract.cycle === 'monthly' || contract.cycle === 'yearly')
+        .sort((a, b) => {
+          const aYearly = a.cycle === 'monthly' ? a.amount * 12 : a.amount;
+          const bYearly = b.cycle === 'monthly' ? b.amount * 12 : b.amount;
+          return bYearly - aYearly;
+        })
+        .slice(0, 3)
+        .map((contract) => ({
+          name: contract.name,
+          amount: contract.amount,
+          currency: contract.currency || 'KRW',
+          cycle: contract.cycle,
+        }));
+
+      setAccountContracts(normalized);
+      const mostRecent = contracts[0]?.updated_at;
+      setLastSyncedAt(
+        mostRecent ? new Date(mostRecent).toLocaleString('ko-KR') : new Date().toLocaleString('ko-KR'),
+      );
+    }
+
+    void loadContractsForSession();
+  }, []);
+
+  const simulatedContracts = useMemo<DisplayContract[]>(() => {
+    const profile = INDUSTRY_PROFILES[industry];
+    return profile.split.map((entry) => ({
+      name: entry.name,
+      amount: Math.round(yearlySpend * entry.ratio),
+      currency: 'KRW',
+      cycle: entry.cycle,
+    }));
+  }, [industry, yearlySpend]);
+
+  const shockContracts = isAccountSession && accountContracts.length > 0 ? accountContracts : simulatedContracts;
+  const isSimulation = !isAccountSession || accountContracts.length === 0;
+  const assumptionsText = `예시 데이터 기준: ${INDUSTRY_PROFILES[industry].label}, 팀 ${employees}명, 반복 결제 ${tools}건, 평균 월 구독비 ₩${spend.toLocaleString()}를 바탕으로 월 지출(인원×건수×월비용)과 연 지출(월×12)을 환산했습니다.`;
 
   const submitLead = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -157,7 +255,13 @@ export default function LandingPage() {
 
       {/* Shock Trigger - CFO Moment */}
       <section className="max-w-4xl mx-auto px-6 z-10 relative">
-        <ShockTrigger contracts={mockAtRisk} />
+        <ShockTrigger
+          contracts={shockContracts}
+          dataSourceType={isSimulation ? 'sample' : 'account'}
+          dataSourceLabel={isSimulation ? '샘플 시나리오 (예시)' : '내 계정 데이터'}
+          assumptionsText={isSimulation ? assumptionsText : undefined}
+          lastSyncedAt={!isSimulation ? (lastSyncedAt || undefined) : undefined}
+        />
       </section>
 
       {/* Waste Calculator Section */}
@@ -168,9 +272,22 @@ export default function LandingPage() {
             <p className="text-zinc-500 font-medium">조직 인원과 반복 비용 건수를 입력하면 예상 지출이 바로 계산됩니다.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-16 text-left">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-16 text-left">
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">조직 규모 (인원)</label>
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">업종</label>
+              <select
+                value={industry}
+                onChange={(e) => setIndustry(e.target.value as 'saas' | 'commerce' | 'agency')}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-white text-sm font-bold"
+              >
+                <option value="saas">SaaS/IT</option>
+                <option value="commerce">이커머스/리테일</option>
+                <option value="agency">에이전시/서비스업</option>
+              </select>
+              <p className="text-xs text-zinc-500">비로그인 시 선택 업종 기준의 예시 시뮬레이션이 반영됩니다.</p>
+            </div>
+            <div className="space-y-4">
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">팀 규모 (인원)</label>
               <input
                 type="range" min="1" max="50" value={employees}
                 onChange={(e) => setEmployees(parseInt(e.target.value))}
