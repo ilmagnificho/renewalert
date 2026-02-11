@@ -8,6 +8,18 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 import Link from 'next/link';
 
+
+interface InvitationPreview {
+    email: string;
+    organization?: {
+        name?: string;
+    };
+}
+
+interface AuthUser {
+    email?: string;
+}
+
 export default function InvitationPage() {
     const params = useParams();
     const router = useRouter();
@@ -15,9 +27,9 @@ export default function InvitationPage() {
     const { addToast } = useToast();
     const [isLoading, setIsLoading] = useState(true);
     const [isAccepting, setIsAccepting] = useState(false);
-    const [invitationData, setInvitationData] = useState<any>(null);
+    const [invitationData, setInvitationData] = useState<InvitationPreview | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<AuthUser | null>(null);
 
     useEffect(() => {
         checkUserAndInvitation();
@@ -64,7 +76,7 @@ export default function InvitationPage() {
                 const err = await res.json();
                 setError(err.error || '유효하지 않거나 만료된 초대입니다.');
             }
-        } catch (e) {
+        } catch (_e) {
             setError('초대 정보를 불러오는데 실패했습니다.');
         } finally {
             setIsLoading(false);
@@ -88,12 +100,12 @@ export default function InvitationPage() {
                 throw new Error(data.error || '초대 수락에 실패했습니다.');
             }
 
-            const data = await res.json();
+            await res.json();
             addToast('success', '팀에 성공적으로 합류했습니다!');
             // Force refresh or redirect to dashboard
             window.location.href = '/dashboard';
-        } catch (e: any) {
-            addToast('error', e.message);
+        } catch (e: unknown) {
+            addToast('error', e instanceof Error ? e.message : '초대 수락에 실패했습니다.');
             setIsAccepting(false);
         }
     };

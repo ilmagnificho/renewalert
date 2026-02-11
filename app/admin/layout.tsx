@@ -3,6 +3,7 @@
 import { useSuperAdmin } from '@/contexts/SuperAdminContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import Link from 'next/link';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
     const { isSuperAdmin, isLoading } = useSuperAdmin();
@@ -30,7 +31,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="font-bold text-xl text-primary">RenewAlert Admin</div>
                     <nav className="flex gap-4 text-sm">
-                        <a href="/dashboard" className="text-muted-foreground hover:text-foreground">Exit to App</a>
+                        <Link href="/dashboard" className="text-muted-foreground hover:text-foreground">Exit to App</Link>
                     </nav>
                 </div>
             </header>

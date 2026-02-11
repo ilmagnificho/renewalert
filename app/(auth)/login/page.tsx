@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -25,13 +25,6 @@ function LoginContent() {
     const enableGuestMode = () => {
         document.cookie = "guest_mode=true; path=/; max-age=3600"; // 1 hour
     };
-
-    // Auto-trigger demo login if query param is present
-    useEffect(() => {
-        if (searchParams.get('auto_demo') === 'true') {
-            handleDemoLogin();
-        }
-    }, [searchParams]);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -65,7 +58,7 @@ function LoginContent() {
         }
     };
 
-    const handleDemoLogin = async () => {
+    const handleDemoLogin = useCallback(async () => {
         setIsDemoLoading(true);
         // Shared demo account to avoid Rate Limits and Email Validation issues
         const demoEmail = 'public_demo@renewalert.com';
@@ -128,7 +121,20 @@ function LoginContent() {
             router.refresh();
         }
         setIsDemoLoading(false);
-    };
+    }, [addToast, router, supabase]);
+
+    // Auto-trigger demo login if query param is present
+    useEffect(() => {
+        if (searchParams.get('auto_demo') === 'true') {
+            const timer = setTimeout(() => {
+                void handleDemoLogin();
+            }, 0);
+
+            return () => clearTimeout(timer);
+        }
+
+        return undefined;
+    }, [handleDemoLogin, searchParams]);
 
     return (
         <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

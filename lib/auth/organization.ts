@@ -67,7 +67,7 @@ export async function getUserOrganization(userId: string) {
     if (error) return { organization: null, role: null, error };
 
     return {
-        organization: data.organization as any as Organization,
+        organization: data.organization as unknown as Organization,
         role: data.role as 'owner' | 'admin' | 'member',
         error: null,
     };

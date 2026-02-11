@@ -17,7 +17,7 @@ export async function POST(
     try {
         const organizationId = await acceptInvitation(token, user.id);
         return NextResponse.json({ success: true, organizationId });
-    } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 400 });
+    } catch (e: unknown) {
+        return NextResponse.json({ error: e instanceof Error ? e.message : 'Unexpected error' }, { status: 400 });
     }
 }

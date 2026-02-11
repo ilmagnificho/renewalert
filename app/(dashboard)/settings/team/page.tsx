@@ -80,8 +80,8 @@ export default function TeamSettingsPage() {
             // For MVP:
             console.log('Invitation Token:', newInvitation.token);
             // addToast('info', `Test Link: /invite/${newInvitation.token}`);
-        } catch (e: any) {
-            addToast('error', e.message);
+        } catch (e: unknown) {
+            addToast('error', e instanceof Error ? e.message : '초대 처리 중 오류가 발생했습니다.');
         } finally {
             setIsInviting(false);
         }
@@ -94,8 +94,8 @@ export default function TeamSettingsPage() {
 
             setInvitations((prev) => prev.filter((inv) => inv.id !== id));
             addToast('success', '초대가 취소되었습니다.');
-        } catch (e: any) {
-            addToast('error', e.message);
+        } catch (e: unknown) {
+            addToast('error', e instanceof Error ? e.message : '초대 처리 중 오류가 발생했습니다.');
         }
     };
 

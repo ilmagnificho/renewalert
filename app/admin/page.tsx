@@ -7,8 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 
+
+interface AdminOrganization {
+    id: string;
+    name: string;
+    plan: string;
+    memberCount: number;
+    contractCount: number;
+    created_at: string;
+}
+
 export default function AdminDashboard() {
-    const [organizations, setOrganizations] = useState<any[]>([]);
+    const [organizations, setOrganizations] = useState<AdminOrganization[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {

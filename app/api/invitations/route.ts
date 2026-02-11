@@ -73,7 +73,7 @@ export async function POST(request: Request) {
         // In real app: await sendInvitationEmail(email, invitation.token);
 
         return NextResponse.json(invitation);
-    } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 400 });
+    } catch (e: unknown) {
+        return NextResponse.json({ error: e instanceof Error ? e.message : 'Unexpected error' }, { status: 400 });
     }
 }

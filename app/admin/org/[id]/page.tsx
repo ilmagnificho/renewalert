@@ -4,14 +4,39 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+
+
+interface AdminOrgMember {
+    id: string;
+    role: string;
+    user: {
+        name: string | null;
+        email: string | null;
+    } | null;
+}
+
+interface AdminOrgContract {
+    id: string;
+    name: string;
+    status: string;
+    amount: number;
+    currency: string;
+}
+
+interface AdminOrganizationDetail {
+    id: string;
+    name: string;
+    plan: string;
+    members: AdminOrgMember[];
+    contracts: AdminOrgContract[];
+}
 
 export default function AdminOrgDetailPage() {
     const params = useParams();
     const router = useRouter();
-    const [organization, setOrganization] = useState<any>(null);
+    const [organization, setOrganization] = useState<AdminOrganizationDetail | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -71,7 +96,7 @@ export default function AdminOrgDetailPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {organization.members.map((member: any) => (
+                                {organization.members.map((member) => (
                                     <TableRow key={member.id}>
                                         <TableCell>
                                             <div className="font-medium">{member.user?.name || 'Unknown'}</div>
@@ -101,7 +126,7 @@ export default function AdminOrgDetailPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {organization.contracts.map((contract: any) => (
+                                {organization.contracts.map((contract) => (
                                     <TableRow key={contract.id}>
                                         <TableCell className="font-medium">{contract.name}</TableCell>
                                         <TableCell>

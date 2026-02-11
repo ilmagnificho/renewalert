@@ -30,7 +30,7 @@ export async function GET(request: Request) {
     }
 
     // Transform data to cleaner format
-    const organizations = data.map((org: any) => ({
+    const organizations = (data ?? []).map((org: { members: Array<{ count: number }>; contracts: Array<{ count: number }> } & Record<string, unknown>) => ({
         ...org,
         memberCount: org.members[0].count,
         contractCount: org.contracts[0].count,

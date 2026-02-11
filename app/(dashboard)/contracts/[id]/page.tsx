@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Contract, CONTRACT_TYPE_LABELS, PAYMENT_CYCLE_LABELS, CONTRACT_STATUS_LABELS, CancellationGuide } from '@/types';
 import { ContractForm } from '@/components/contracts/contract-form';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmModal } from '@/components/ui/modal';
 import { useToast } from '@/components/ui/toast';
@@ -35,11 +34,7 @@ export default function ContractDetailPage() {
     const [isDeleting, setIsDeleting] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    useEffect(() => {
-        fetchContract();
-    }, [params.id]);
-
-    const fetchContract = async () => {
+    const fetchContract = useCallback(async () => {
         setIsLoading(true);
         const [res, summaryRes] = await Promise.all([
             fetch(`/api/contracts/${params.id}`),
@@ -62,7 +57,15 @@ export default function ContractDetailPage() {
             setExchangeRate(summary.exchangeRate);
         }
         setIsLoading(false);
-    };
+    }, [params.id]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            void fetchContract();
+        }, 0);
+
+        return () => clearTimeout(timer);
+    }, [fetchContract]);
 
     const handleDelete = async () => {
         setIsDeleting(true);
@@ -313,7 +316,7 @@ export default function ContractDetailPage() {
             >
                 <div className="space-y-6">
                     <div>
-                        <p className="text-white font-medium mb-1">"{contract.name}" 계약을 해지 완료로 처리하시겠습니까?</p>
+                        <p className="text-white font-medium mb-1">&quot;{contract.name}&quot; 계약을 해지 완료로 처리하시겠습니까?</p>
                         <p className="text-slate-400 text-sm">해지 후에는 더 이상 알림이 발송되지 않습니다.</p>
                     </div>
 
