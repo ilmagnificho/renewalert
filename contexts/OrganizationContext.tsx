@@ -17,6 +17,8 @@ interface OrganizationContextType {
     refetch: () => Promise<void>;
 }
 
+const ORG_SCHEMA_UNAVAILABLE_KEY = 'renewalert_org_schema_unavailable';
+
 const OrganizationContext = createContext<OrganizationContextType>({
     organization: null,
     role: null,
@@ -24,6 +26,19 @@ const OrganizationContext = createContext<OrganizationContextType>({
     isLoading: true,
     refetch: async () => { },
 });
+
+function isOrgSchemaMissing(error: { code?: string; message?: string } | null) {
+    if (!error) return false;
+
+    const code = error.code || '';
+    const message = (error.message || '').toLowerCase();
+
+    return (
+        code === '42P01' || // postgres: relation does not exist
+        code === 'PGRST205' || // postgrest: table or schema unavailable
+        message.includes('organization_members') && message.includes('does not exist')
+    );
+}
 
 export function OrganizationProvider({ children }: { children: React.ReactNode }) {
     const [organization, setOrganization] = useState<Organization | null>(null);
@@ -35,40 +50,61 @@ export function OrganizationProvider({ children }: { children: React.ReactNode }
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
+            setOrganization(null);
+            setRole(null);
             setIsLoading(false);
             return;
         }
 
-        const { data, error } = await supabase
-            .from('organization_members')
-            .select(`
-        role,
-        organization:organizations(*)
-      `)
-            .eq('user_id', user.id)
-            .single<OrganizationMemberRow>();
+        if (typeof window !== 'undefined' && window.sessionStorage.getItem(ORG_SCHEMA_UNAVAILABLE_KEY) === '1') {
+            setOrganization(null);
+            setRole(null);
+            setIsLoading(false);
+            return;
+        }
 
-        if (error) {
-            // Backward compatibility: org tables may not exist yet in some environments.
-            if (error.code === '42P01') {
-                setOrganization(null);
-                setRole(null);
+        try {
+            const { data, error } = await supabase
+                .from('organization_members')
+                .select(`
+          role,
+          organization:organizations(*)
+        `)
+                .eq('user_id', user.id)
+                .maybeSingle<OrganizationMemberRow>();
+
+            if (error) {
+                if (isOrgSchemaMissing(error)) {
+                    if (typeof window !== 'undefined') {
+                        window.sessionStorage.setItem(ORG_SCHEMA_UNAVAILABLE_KEY, '1');
+                    }
+
+                    setOrganization(null);
+                    setRole(null);
+                    setIsLoading(false);
+                    return;
+                }
+
                 setIsLoading(false);
                 return;
             }
 
-            setIsLoading(false);
-            return;
+            if (data) {
+                const normalizedOrg = Array.isArray(data.organization)
+                    ? data.organization[0] ?? null
+                    : data.organization;
+
+                setOrganization(normalizedOrg);
+                setRole(data.role);
+            } else {
+                setOrganization(null);
+                setRole(null);
+            }
+        } catch {
+            setOrganization(null);
+            setRole(null);
         }
 
-        if (data) {
-            const organization = Array.isArray(data.organization)
-                ? data.organization[0] ?? null
-                : data.organization;
-
-            setOrganization(organization);
-            setRole(data.role as 'owner' | 'admin' | 'member');
-        }
         setIsLoading(false);
     };
 
