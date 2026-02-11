@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useLocale } from 'next-intl';
 import { ShockTrigger } from '@/components/dashboard/shock-trigger';
 import { createClient } from '@/lib/supabase/client';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 type DisplayContract = {
   name: string;
@@ -45,6 +47,9 @@ const INDUSTRY_PROFILES: Record<string, { label: string; split: Array<{ name: st
 };
 
 export default function LandingPage() {
+  const locale = useLocale();
+  const isEnglish = locale === 'en';
+
   const [industry, setIndustry] = useState<'saas' | 'commerce' | 'agency'>('saas');
   const [employees, setEmployees] = useState(12);
   const [tools, setTools] = useState(8);
@@ -94,7 +99,7 @@ export default function LandingPage() {
 
         if (!contracts || contracts.length === 0) {
           setAccountContracts([]);
-          setLastSyncedAt(new Date().toLocaleString('ko-KR'));
+          setLastSyncedAt(new Date().toLocaleString(isEnglish ? 'en-US' : 'ko-KR'));
           return;
         }
 
@@ -116,7 +121,7 @@ export default function LandingPage() {
         setAccountContracts(normalized);
         const mostRecent = contracts[0]?.updated_at;
         setLastSyncedAt(
-          mostRecent ? new Date(mostRecent).toLocaleString('ko-KR') : new Date().toLocaleString('ko-KR'),
+          mostRecent ? new Date(mostRecent).toLocaleString(isEnglish ? 'en-US' : 'ko-KR') : new Date().toLocaleString(isEnglish ? 'en-US' : 'ko-KR'),
         );
       } catch {
         setIsAccountSession(false);
@@ -140,7 +145,9 @@ export default function LandingPage() {
 
   const shockContracts = isAccountSession && accountContracts.length > 0 ? accountContracts : simulatedContracts;
   const isSimulation = !isAccountSession || accountContracts.length === 0;
-  const assumptionsText = `예시 데이터 기준: ${INDUSTRY_PROFILES[industry].label}, 팀 ${employees}명, 반복 결제 ${tools}건, 평균 월 구독비 ₩${spend.toLocaleString()}를 바탕으로 월 지출(인원×건수×월비용)과 연 지출(월×12)을 환산했습니다.`;
+  const assumptionsText = isEnglish
+    ? `Sample assumptions: ${INDUSTRY_PROFILES[industry].label}, team size ${employees}, recurring payments ${tools}, average monthly subscription ₩${spend.toLocaleString()}. Monthly spend is estimated by team×contracts×monthly cost, and annual spend by monthly×12.`
+    : `예시 데이터 기준: ${INDUSTRY_PROFILES[industry].label}, 팀 ${employees}명, 반복 결제 ${tools}건, 평균 월 구독비 ₩${spend.toLocaleString()}를 바탕으로 월 지출(인원×건수×월비용)과 연 지출(월×12)을 환산했습니다.`;
 
   const submitLead = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -172,7 +179,7 @@ export default function LandingPage() {
 
       setLeadStatus({
         type: 'success',
-        message: '상담 요청이 접수되었습니다. 영업팀이 빠르게 연락드릴게요.',
+        message: isEnglish ? 'Your consultation request has been received. Our team will reach out soon.' : '상담 요청이 접수되었습니다. 영업팀이 빠르게 연락드릴게요.',
       });
 
       setContactName('');
@@ -182,7 +189,7 @@ export default function LandingPage() {
     } catch {
       setLeadStatus({
         type: 'error',
-        message: '요청 전송에 실패했습니다. support@renewalert.com 으로 문의 부탁드립니다.',
+        message: isEnglish ? 'Failed to submit. Please contact support@renewalert.com.' : '요청 전송에 실패했습니다. support@renewalert.com 으로 문의 부탁드립니다.',
       });
     } finally {
       setIsSubmittingLead(false);
@@ -200,7 +207,7 @@ export default function LandingPage() {
       {/* Financial Exposure Line */}
       <div className="relative z-[60] bg-zinc-900/80 backdrop-blur-md border-b border-white/5 py-2.5 px-6 text-center">
         <p className="text-[10px] sm:text-xs font-bold tracking-tight text-zinc-400">
-          실수로 갱신된 협업 도구 1년치 요금은 단순한 &apos;실수&apos;가 아닌 확정된 영업 이익의 손실입니다.
+          {isEnglish ? 'A mistakenly renewed annual tool subscription is not a minor mistake — it is a direct hit to operating profit.' : "실수로 갱신된 협업 도구 1년치 요금은 단순한 '실수'가 아닌 확정된 영업 이익의 손실입니다."}
         </p>
       </div>
 
@@ -215,18 +222,19 @@ export default function LandingPage() {
             </div>
             <span className="text-lg font-extrabold tracking-[0.01em] text-white">Renew<span className="text-red-400">Alert</span></span>
           </Link>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
+            <LanguageSwitcher />
             <Link
               href="/login"
               className="text-sm font-medium text-zinc-400 hover:text-white transition-colors hidden sm:block"
             >
-              로그인
+              {isEnglish ? 'Log in' : '로그인'}
             </Link>
             <Link
               href="/login?auto_demo=true"
               className="text-sm font-black bg-white text-black px-6 py-2.5 rounded-full hover:bg-zinc-200 transition-all duration-200 shadow-xl shadow-white/5 active:scale-95"
             >
-              시스템 시작
+              {isEnglish ? 'Get started' : '시스템 시작'}
             </Link>
           </div>
         </div>
@@ -236,33 +244,33 @@ export default function LandingPage() {
       <section className="relative pt-32 pb-24 px-6 z-10 overflow-hidden">
         <div className="max-w-5xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-zinc-900/50 border border-zinc-800 text-zinc-500 text-[10px] uppercase tracking-[0.2em] font-black px-4 py-1.5 rounded-full mb-10 backdrop-blur-md">
-            <span>의사결정 타이밍 + 비용 손실 방지</span>
+            <span>{isEnglish ? 'Decision timing + spend leakage prevention' : '의사결정 타이밍 + 비용 손실 방지'}</span>
           </div>
           <h1 className="text-5xl sm:text-7xl lg:text-8xl font-black tracking-tight leading-[1.05] mb-10 text-white animate-fade-in-up drop-shadow-[0_0_20px_rgba(251,146,60,0.15)]">
-            자동 결제 전에<br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-amber-200 to-yellow-300">결정하세요</span>
+            {isEnglish ? 'Decide before auto-renewal' : '자동 결제 전에'}<br />
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-orange-300 via-amber-200 to-yellow-300">{isEnglish ? 'Protect margin' : '결정하세요'}</span>
           </h1>
           <p className="text-lg sm:text-2xl text-zinc-500 max-w-3xl mx-auto mb-12 leading-relaxed px-4 font-medium">
-            깜빡하면 오늘도 쓰지 않는 서비스에 30만원이 결제됩니다.
+            {isEnglish ? 'One missed renewal can burn budget on tools your team no longer uses.' : '깜빡하면 오늘도 쓰지 않는 서비스에 30만원이 결제됩니다.'}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 w-full max-w-3xl mx-auto">
             <Link
               href="/login?auto_demo=true"
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-black font-black px-10 py-5 rounded-2xl hover:bg-zinc-200 transition-all duration-300 text-xl shadow-2xl shadow-white/10"
             >
-              바로 체험
+              {isEnglish ? 'Start free demo' : '바로 체험'}
             </Link>
             <Link
               href="#consultation-form"
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-zinc-700 text-white font-black px-10 py-5 rounded-2xl hover:border-zinc-400 hover:bg-zinc-900/50 transition-all duration-300 text-xl"
             >
-              도입 상담/견적 요청
+              {isEnglish ? 'Request consultation' : '도입 상담/견적 요청'}
             </Link>
             <Link
               href="/sample-dashboard"
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-zinc-800 text-zinc-300 font-black px-8 py-5 rounded-2xl hover:text-white hover:border-zinc-500 transition-all duration-300 text-lg"
             >
-              제품 둘러보기(샘플 대시보드)
+              {isEnglish ? 'Product tour (sample dashboard)' : '제품 둘러보기(샘플 대시보드)'}
             </Link>
           </div>
           <p className="mt-8 text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em]">
@@ -276,7 +284,7 @@ export default function LandingPage() {
         <ShockTrigger
           contracts={shockContracts}
           dataSourceType={isSimulation ? 'sample' : 'account'}
-          dataSourceLabel={isSimulation ? '샘플 시나리오 (예시)' : '내 계정 데이터'}
+          dataSourceLabel={isSimulation ? (isEnglish ? 'Sample scenario' : '샘플 시나리오 (예시)') : (isEnglish ? 'Your account data' : '내 계정 데이터')}
           assumptionsText={isSimulation ? assumptionsText : undefined}
           lastSyncedAt={!isSimulation ? (lastSyncedAt || undefined) : undefined}
         />
@@ -286,44 +294,44 @@ export default function LandingPage() {
       <section className="py-24 px-6 z-10 text-center">
         <div className="max-w-4xl mx-auto p-12 bg-zinc-950 border border-white/5 rounded-[3rem] shadow-3xl">
           <div className="mb-16">
-            <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 tracking-tight">반복 지출 규모를 확인하세요</h2>
-            <p className="text-zinc-500 font-medium">조직 인원과 반복 비용 건수를 입력하면 예상 지출이 바로 계산됩니다.</p>
+            <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 tracking-tight">{isEnglish ? 'Estimate your recurring spend exposure' : '반복 지출 규모를 확인하세요'}</h2>
+            <p className="text-zinc-500 font-medium">{isEnglish ? 'Adjust team size and recurring contracts to estimate spend instantly.' : '조직 인원과 반복 비용 건수를 입력하면 예상 지출이 바로 계산됩니다.'}</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-16 text-left">
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">업종</label>
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">{isEnglish ? 'Industry' : '업종'}</label>
               <select
                 value={industry}
                 onChange={(e) => setIndustry(e.target.value as 'saas' | 'commerce' | 'agency')}
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-white text-sm font-bold"
               >
                 <option value="saas">SaaS/IT</option>
-                <option value="commerce">이커머스/리테일</option>
-                <option value="agency">에이전시/서비스업</option>
+                <option value="commerce">{isEnglish ? 'Commerce/Retail' : '이커머스/리테일'}</option>
+                <option value="agency">{isEnglish ? 'Agency/Services' : '에이전시/서비스업'}</option>
               </select>
-              <p className="text-xs text-zinc-500">비로그인 시 선택 업종 기준의 예시 시뮬레이션이 반영됩니다.</p>
+              <p className="text-xs text-zinc-500">{isEnglish ? 'When logged out, sample simulation is based on selected industry.' : '비로그인 시 선택 업종 기준의 예시 시뮬레이션이 반영됩니다.'}</p>
             </div>
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">팀 규모 (인원)</label>
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">{isEnglish ? 'Team size' : '팀 규모 (인원)'}</label>
               <input
                 type="range" min="1" max="50" value={employees}
                 onChange={(e) => setEmployees(parseInt(e.target.value))}
                 className="w-full accent-white h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
               />
-              <div className="text-2xl font-black text-white">{employees}명</div>
+              <div className="text-2xl font-black text-white">{employees}{isEnglish ? '' : '명'}</div>
             </div>
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">구독 중인 반복 비용 건수</label>
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">{isEnglish ? 'Recurring contracts' : '구독 중인 반복 비용 건수'}</label>
               <input
                 type="range" min="1" max="50" value={tools}
                 onChange={(e) => setTools(parseInt(e.target.value))}
                 className="w-full accent-white h-1 bg-zinc-800 rounded-lg appearance-none cursor-pointer"
               />
-              <div className="text-2xl font-black text-white">{tools}개</div>
+              <div className="text-2xl font-black text-white">{tools}{isEnglish ? '' : '개'}</div>
             </div>
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">평균 월 구독 비용</label>
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block">{isEnglish ? 'Avg monthly subscription cost' : '평균 월 구독 비용'}</label>
               <input
                 type="range" min="10000" max="300000" step="5000" value={spend}
                 onChange={(e) => setSpend(parseInt(e.target.value))}
@@ -334,24 +342,24 @@ export default function LandingPage() {
           </div>
 
           <div className="pt-12 border-t border-white/5 text-center">
-            <p className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.4em] mb-4">관리 대상 연간 구독 비용</p>
+            <p className="text-zinc-600 text-[9px] font-black uppercase tracking-[0.4em] mb-4">{isEnglish ? 'Estimated managed subscription spend' : '관리 대상 연간 구독 비용'}</p>
             <div className="space-y-2 mb-10">
               <div className="text-3xl sm:text-4xl font-black text-zinc-400 tabular-nums tracking-tighter">
-                ₩{monthlySpend.toLocaleString()} / 월
+                ₩{monthlySpend.toLocaleString()} / {isEnglish ? 'month' : '월'}
               </div>
               <div className="text-5xl sm:text-7xl font-black text-white tabular-nums tracking-tighter">
-                ₩{yearlySpend.toLocaleString()} / 연
+                ₩{yearlySpend.toLocaleString()} / {isEnglish ? 'year' : '연'}
               </div>
               <p className="text-zinc-500 text-sm font-medium mt-2">
-                자동 갱신 전에 점검하면 불필요한 지출을 줄일 수 있습니다.
+                {isEnglish ? 'Reviewing before auto-renewal helps reduce unnecessary spend.' : '자동 갱신 전에 점검하면 불필요한 지출을 줄일 수 있습니다.'}
               </p>
               <div className="text-zinc-600 text-[10px] font-mono mt-4">
-                예: {employees}명 × {tools}건 × ₩{spend.toLocaleString()} → 약 ₩{yearlySpend.toLocaleString()} / 연
+                예: {employees}명 × {tools}건 × ₩{spend.toLocaleString()} → 약 ₩{yearlySpend.toLocaleString()} / {isEnglish ? 'year' : '연'}
               </div>
             </div>
 
             <div className="bg-zinc-900/40 border border-white/5 rounded-2xl p-6 mb-12 inline-block">
-              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-2">사전 점검으로 줄일 수 있는 비용 (예상)</p>
+              <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-2">{isEnglish ? 'Estimated preventable spend' : '사전 점검으로 줄일 수 있는 비용 (예상)'}</p>
               <div className="text-2xl sm:text-3xl font-black text-blue-400 tracking-tight">
                 ₩{recoverableSpendMin.toLocaleString()} ~ ₩{recoverableSpendMax.toLocaleString()} / 연
               </div>
@@ -359,8 +367,7 @@ export default function LandingPage() {
 
             <div className="block mb-10">
               <p className="text-zinc-400 text-sm font-bold">
-                단 한 건의 자동 갱신만 막아도 <br className="sm:hidden" />
-                RenewAlert은 1년 사용 비용을 회수할 수 있습니다.
+                {isEnglish ? 'Preventing even one unnecessary auto-renewal can pay for RenewAlert for a year.' : <>단 한 건의 자동 갱신만 막아도 <br className="sm:hidden" />RenewAlert은 1년 사용 비용을 회수할 수 있습니다.</>}
               </p>
             </div>
 
@@ -368,7 +375,7 @@ export default function LandingPage() {
               href="/login?auto_demo=true"
               className="inline-flex items-center justify-center gap-2 bg-white text-black font-black px-12 py-5 rounded-2xl hover:bg-zinc-200 transition-all duration-300 text-xl"
             >
-              지금 비용 누수 점검하기
+              {isEnglish ? 'Check spend leakage now' : '지금 비용 누수 점검하기'}
             </Link>
           </div>
         </div>
@@ -447,7 +454,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto mb-12 px-4">
           <div className="rounded-2xl border border-emerald-400/30 bg-emerald-500/10 py-4 px-6 text-center">
             <p className="text-emerald-200 font-bold text-sm sm:text-base">
-              도입 리스크 제로 · 무료 시작 · 카드 등록 불필요 · 언제든 해지
+              {isEnglish ? 'Zero adoption risk · Start free · No card required · Cancel anytime' : '도입 리스크 제로 · 무료 시작 · 카드 등록 불필요 · 언제든 해지'}
             </p>
           </div>
         </div>
@@ -492,7 +499,7 @@ export default function LandingPage() {
               <li className="flex items-center gap-2">✔ 조직 가시성 & 관리자 권한</li>
               <li className="flex items-center gap-2">✔ 우선 순위 기술 지원</li>
             </ul>
-            <Link href="#consultation-form" className="w-full py-4 rounded-xl border border-zinc-800 text-zinc-400 font-black hover:text-white transition-colors text-sm text-center">상담 요청하기</Link>
+            <Link href="#consultation-form" className="w-full py-4 rounded-xl border border-zinc-800 text-zinc-400 font-black hover:text-white transition-colors text-sm text-center">{isEnglish ? 'Request consultation' : '상담 요청하기'}</Link>
           </div>
         </div>
       </section>
@@ -501,7 +508,7 @@ export default function LandingPage() {
         <div className="max-w-4xl mx-auto rounded-[2.5rem] border border-white/10 bg-zinc-950/80 p-10 sm:p-14">
           <div className="text-center mb-12">
             <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4">B2B Sales Pipeline</p>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">도입 상담/견적 요청</h2>
+            <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">{isEnglish ? 'Request consultation' : '도입 상담/견적 요청'}</h2>
             <p className="text-zinc-400 font-medium">Growth/Enterprise 도입 검토를 위한 상담 일정을 바로 잡아드립니다.</p>
           </div>
 
@@ -511,7 +518,7 @@ export default function LandingPage() {
                 required
                 value={contactName}
                 onChange={(event) => setContactName(event.target.value)}
-                placeholder="이름"
+                placeholder={isEnglish ? 'Name' : '이름'}
                 className="w-full px-5 py-4 rounded-xl bg-black border border-zinc-800 text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500"
               />
               <input
@@ -519,7 +526,7 @@ export default function LandingPage() {
                 type="email"
                 value={contactEmail}
                 onChange={(event) => setContactEmail(event.target.value)}
-                placeholder="회사 이메일"
+                placeholder={isEnglish ? 'Work email' : '회사 이메일'}
                 className="w-full px-5 py-4 rounded-xl bg-black border border-zinc-800 text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500"
               />
             </div>
@@ -528,7 +535,7 @@ export default function LandingPage() {
               required
               value={contactCompany}
               onChange={(event) => setContactCompany(event.target.value)}
-              placeholder="회사명"
+              placeholder={isEnglish ? 'Company' : '회사명'}
               className="w-full px-5 py-4 rounded-xl bg-black border border-zinc-800 text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500"
             />
 
@@ -536,7 +543,7 @@ export default function LandingPage() {
               rows={4}
               value={contactMessage}
               onChange={(event) => setContactMessage(event.target.value)}
-              placeholder="현재 관리 중인 구독 수, 필요한 기능, 희망 일정 등을 알려주세요."
+              placeholder={isEnglish ? 'Share your current subscriptions, needed features, and preferred timeline.' : '현재 관리 중인 구독 수, 필요한 기능, 희망 일정 등을 알려주세요.'}
               className="w-full px-5 py-4 rounded-xl bg-black border border-zinc-800 text-white placeholder:text-zinc-500 focus:outline-none focus:border-zinc-500"
             />
 
@@ -545,7 +552,7 @@ export default function LandingPage() {
               disabled={isSubmittingLead}
               className="w-full py-5 rounded-xl bg-white text-black font-black hover:bg-zinc-200 transition-colors disabled:opacity-60"
             >
-              {isSubmittingLead ? '요청 전송 중...' : '상담 요청 보내기'}
+              {isSubmittingLead ? (isEnglish ? 'Submitting...' : '요청 전송 중...') : (isEnglish ? 'Send consultation request' : '상담 요청 보내기')}
             </button>
 
             {leadStatus && (
@@ -555,7 +562,7 @@ export default function LandingPage() {
             )}
 
             <p className="text-zinc-500 text-xs">
-              폼 제출 이벤트는 세일즈 파이프라인으로 자동 전달되어 담당자가 확인합니다.
+              {isEnglish ? 'Form submissions are automatically routed into our sales pipeline.' : '폼 제출 이벤트는 세일즈 파이프라인으로 자동 전달되어 담당자가 확인합니다.'}
             </p>
           </form>
         </div>
@@ -563,13 +570,13 @@ export default function LandingPage() {
 
       {/* CTA Final */}
       <section className="py-48 px-6 z-10 relative text-center">
-        <h2 className="text-5xl sm:text-7xl font-black text-white mb-10 tracking-tighter leading-tight">손실로 확정되기 전에<br />통제권을 가지세요</h2>
-        <p className="text-zinc-500 text-xl mb-12 max-w-2xl mx-auto leading-relaxed font-bold">전수 조사 및 셋업에 필요한 시간은 단 3분입니다.</p>
+        <h2 className="text-5xl sm:text-7xl font-black text-white mb-10 tracking-tighter leading-tight">{isEnglish ? 'Take control before spend becomes a loss' : '손실로 확정되기 전에'}<br />{isEnglish ? '' : '통제권을 가지세요'}</h2>
+        <p className="text-zinc-500 text-xl mb-12 max-w-2xl mx-auto leading-relaxed font-bold">{isEnglish ? 'It only takes 3 minutes to set up and start controlling renewals.' : '전수 조사 및 셋업에 필요한 시간은 단 3분입니다.'}</p>
         <Link
           href="/login?auto_demo=true"
           className="inline-flex items-center justify-center gap-2 bg-white text-black font-black px-12 py-6 rounded-2xl hover:bg-zinc-200 transition-all duration-300 text-3xl shadow-3xl shadow-white/5"
         >
-          지금 즉시 도입
+          {isEnglish ? 'Start now' : '지금 즉시 도입'}
         </Link>
         <div className="mt-16 text-zinc-700 font-mono text-[10px] uppercase font-black tracking-[0.4em]">
           Institutional Cash Preservation System
@@ -587,21 +594,21 @@ export default function LandingPage() {
             </div>
             <div className="text-center md:text-left">
               <span className="block text-zinc-500 font-black tracking-tighter text-sm px-1 italic">RenewAlert</span>
-              <p className="text-zinc-600 text-xs mt-1">RenewAlert Inc. · 서울특별시 강남구 테헤란로 123</p>
+              <p className="text-zinc-600 text-xs mt-1">{isEnglish ? 'RenewAlert Inc. · 123 Teheran-ro, Gangnam-gu, Seoul' : 'RenewAlert Inc. · 서울특별시 강남구 테헤란로 123'}</p>
             </div>
           </div>
 
           <div className="text-center md:text-left space-y-2">
             <p className="text-zinc-500 text-xs font-bold uppercase tracking-[0.2em]">Contact</p>
             <p className="text-zinc-400 text-sm">sales@renewalert.ai</p>
-            <p className="text-zinc-400 text-sm">카카오톡 채널 · @renewalert</p>
-            <p className="text-zinc-400 text-sm">고객지원: 평일 09:00 - 18:00 (KST)</p>
+            <p className="text-zinc-400 text-sm">{isEnglish ? 'Kakao channel · @renewalert' : '카카오톡 채널 · @renewalert'}</p>
+            <p className="text-zinc-400 text-sm">{isEnglish ? 'Support: Mon–Fri 09:00 - 18:00 (KST)' : '고객지원: 평일 09:00 - 18:00 (KST)'}</p>
           </div>
 
           <div className="text-center md:text-right space-y-3">
             <div className="flex items-center justify-center md:justify-end gap-4 text-sm">
-              <Link href="/terms" className="text-zinc-400 hover:text-white transition-colors">이용약관</Link>
-              <Link href="/privacy" className="text-zinc-400 hover:text-white transition-colors">개인정보처리방침</Link>
+              <Link href="/terms" className="text-zinc-400 hover:text-white transition-colors">{isEnglish ? 'Terms' : '이용약관'}</Link>
+              <Link href="/privacy" className="text-zinc-400 hover:text-white transition-colors">{isEnglish ? 'Privacy Policy' : '개인정보처리방침'}</Link>
             </div>
             <div className="text-zinc-700 text-[9px] uppercase font-black tracking-[0.3em]">
               © 2025 RenewAlert Global · Built for Operators

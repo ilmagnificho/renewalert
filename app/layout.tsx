@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased bg-background text-foreground transition-colors duration-300`}>
         <ThemeProvider
           attribute="class"
