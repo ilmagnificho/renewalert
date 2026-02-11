@@ -21,6 +21,7 @@ export interface User {
 export interface Contract {
   id: string;
   user_id: string;
+  organization_id?: string;
   name: string;
   type: ContractType;
   amount: number;
@@ -28,7 +29,7 @@ export interface Contract {
   cycle: PaymentCycle;
   expires_at: string;
   auto_renew: boolean;
-  notice_days: number;
+  notice_days: number | null;
   status: ContractStatus;
   saved_amount: number | null;
   memo: string | null;

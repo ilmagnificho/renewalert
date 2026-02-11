@@ -36,7 +36,7 @@ export async function updateSession(request: NextRequest) {
     // Protected routes
     const protectedPaths = ['/dashboard', '/contracts', '/settings'];
     const isProtected = protectedPaths.some((path) =>
-        request.nextUrl.pathname.startsWith(path)
+        request.nextUrl.pathname.match(new RegExp(`^(/en|/ko)?${path}`))
     );
 
     const guestMode = request.cookies.get('guest_mode');

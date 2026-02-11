@@ -1,0 +1,40 @@
+{
+    "Common": {
+        "save": "저장",
+        "cancel": "취소",
+        "confirm": "확인",
+        "delete": "삭제",
+        "edit": "수정",
+        "loading": "로딩 중..."
+    },
+    "Sidebar": {
+        "home": "홈",
+        "contracts": "계약 관리",
+        "pricing": "요금제",
+        "settings": "설정",
+        "admin": "관리자 대시보드",
+        "addContract": "계약 추가",
+        "signOut": "로그아웃"
+    },
+    "Dashboard": {
+        "welcome": "환영합니다",
+        "totalSpent": "월 총 지출",
+        "activeContracts": "활성 계약",
+        "upcomingRenewals": "갱신 예정",
+        "days": "일 전"
+    },
+    "Settings": {
+        "title": "설정",
+        "profile": "프로필",
+        "team": "팀 관리",
+        "teamDescription": "팀원을 초대하고 권한을 관리하세요."
+    },
+    "Auth": {
+        "login": "로그인",
+        "signup": "회원가입",
+        "companyName": "회사명",
+        "email": "이메일",
+        "password": "비밀번호",
+        "continue": "계속하기"
+    }
+}

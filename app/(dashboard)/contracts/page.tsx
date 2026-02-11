@@ -1,7 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Contract, DashboardSummary } from '@/types';
 import { ContractCard } from '@/components/contracts/contract-card';
@@ -9,20 +8,34 @@ import { Button } from '@/components/ui/button';
 import { Input, Select } from '@/components/ui/input';
 import Link from 'next/link';
 import { formatCurrency } from '@/lib/utils';
-import { createClient } from '@/lib/supabase/client';
+import { useContracts } from '@/hooks/use-contracts';
+import { useOrganization } from '@/contexts/OrganizationContext';
+import { useExchangeRate } from '@/hooks/use-exchange-rate';
 
 export const dynamic = 'force-dynamic';
 
 export default function ContractsPage() {
-    const searchParams = useSearchParams();
-    const [contracts, setContracts] = useState<Contract[]>([]);
-    const [summary, setSummary] = useState<DashboardSummary | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [search, setSearch] = useState(searchParams.get('search') || '');
-    const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || 'all');
-    const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'active');
+    const { contracts, isLoading: isContractsLoading } = useContracts();
+    const { organization, isAdmin, isLoading: isOrgLoading } = useOrganization();
+    const { rate: exchangeRate } = useExchangeRate();
 
-    const buildSummaryFromContracts = (items: Contract[]): DashboardSummary => {
+    const [search, setSearch] = useState('');
+    const [typeFilter, setTypeFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState('active');
+
+    // Filter contracts locally
+    const filteredContracts = useMemo(() => {
+        return contracts.filter(contract => {
+            const matchesSearch = contract.name.toLowerCase().includes(search.toLowerCase()) ||
+                (contract.memo && contract.memo.toLowerCase().includes(search.toLowerCase()));
+            const matchesType = typeFilter === 'all' || contract.type === typeFilter;
+            const matchesStatus = statusFilter === 'all' || contract.status === statusFilter;
+
+            return matchesSearch && matchesType && matchesStatus;
+        });
+    }, [contracts, search, typeFilter, statusFilter]);
+
+    const summary = useMemo(() => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -31,9 +44,11 @@ export default function ContractsPage() {
         let normal = 0;
         let totalMonthlyKRW = 0;
         let totalMonthlyUSD = 0;
-        const exchangeRate = 1400;
 
-        items.filter((contract) => contract.status === 'active').forEach((contract) => {
+        // Calculate summary based on ACTIVE contracts in the filtered list (or all active? Usually summary is for all active)
+        // Let's use ALL active contracts for the top summary cards, regardless of current filters, 
+        // to give a complete overview. Filters apply to the list below.
+        contracts.filter((contract) => contract.status === 'active').forEach((contract) => {
             const expiresAt = new Date(contract.expires_at);
             expiresAt.setHours(0, 0, 0, 0);
             const diff = Math.ceil((expiresAt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -56,171 +71,14 @@ export default function ContractsPage() {
             warning,
             normal,
             totalMonthly,
-            totalYearly: totalMonthly * 12,
             totalMonthlyKRW,
             totalMonthlyUSD,
-            totalYearlyKRW: totalMonthlyKRW * 12,
-            totalYearlyUSD: totalMonthlyUSD * 12,
-            totalContracts: items.length,
             exchangeRate,
-            totalSavedKRW: 0,
         };
-    };
-
-    const fetchContracts = useCallback(async () => {
-        setIsLoading(true);
-
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-            // Guest Mode (Mock Data) 
-            const mockData: Contract[] = [
-                {
-                    id: 'mock-1',
-                    name: 'Adobe Creative Cloud',
-                    type: 'saas',
-                    status: 'active',
-                    expires_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-                    amount: 62000,
-                    currency: 'KRW',
-                    cycle: 'monthly',
-                    memo: '디자인 팀 라이선스',
-                    auto_renew: true,
-                    notice_days: 7,
-                    saved_amount: null,
-                    user_id: 'mock',
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                },
-                {
-                    id: 'mock-2',
-                    name: 'AWS Infrastructure',
-                    type: 'saas',
-                    status: 'active',
-                    expires_at: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString(),
-                    amount: 20,
-                    currency: 'USD',
-                    cycle: 'monthly',
-                    memo: '메인 서버 호스팅',
-                    auto_renew: true,
-                    notice_days: 30,
-                    saved_amount: null,
-                    user_id: 'mock',
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                },
-                {
-                    id: 'mock-3',
-                    name: '강남 오피스 임대료',
-                    type: 'rent',
-                    status: 'active',
-                    expires_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-                    amount: 3500000,
-                    currency: 'KRW',
-                    cycle: 'monthly',
-                    memo: '본사 사무실',
-                    auto_renew: false,
-                    notice_days: 90,
-                    saved_amount: null,
-                    user_id: 'mock',
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                },
-                {
-                    id: 'mock-4',
-                    name: '삼성화재 업무용 자동차보험',
-                    type: 'insurance',
-                    status: 'active',
-                    expires_at: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString(),
-                    amount: 850000,
-                    currency: 'KRW',
-                    cycle: 'yearly',
-                    memo: '법인 차량 3대',
-                    auto_renew: true,
-                    notice_days: 30,
-                    saved_amount: null,
-                    user_id: 'mock',
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                },
-                {
-                    id: 'mock-5',
-                    name: 'Slack Enterprise',
-                    type: 'saas',
-                    status: 'renewed',
-                    expires_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-                    amount: 1500000,
-                    currency: 'KRW',
-                    cycle: 'yearly',
-                    memo: '전사 메신저',
-                    auto_renew: true,
-                    notice_days: 30,
-                    saved_amount: null,
-                    user_id: 'mock',
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                }
-            ];
-
-            // Apply client-side filtering for mock data
-            let filtered = mockData;
-            if (typeFilter !== 'all') filtered = filtered.filter(c => c.type === typeFilter);
-            if (statusFilter !== 'all') filtered = filtered.filter(c => c.status === statusFilter);
-            if (search) filtered = filtered.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
-
-            setContracts(filtered);
-            setSummary({
-                urgent: 1,
-                warning: 1,
-                normal: 2,
-                totalMonthly: 4124000,
-                totalYearly: 49488000,
-                totalMonthlyKRW: 4096000,
-                totalMonthlyUSD: 20,
-                totalYearlyKRW: 49152000,
-                totalYearlyUSD: 240,
-                totalContracts: 5,
-                exchangeRate: 1400,
-                totalSavedKRW: 8420000
-            });
-            setIsLoading(false);
-            return;
-        }
-
-        const params = new URLSearchParams();
-        if (typeFilter !== 'all') params.set('type', typeFilter);
-        if (statusFilter !== 'all') params.set('status', statusFilter);
-        if (search) params.set('search', search);
-
-        const [contractsRes, summaryRes] = await Promise.all([
-            fetch(`/api/contracts?${params.toString()}`, { cache: 'no-store' }),
-            fetch('/api/dashboard/summary', { cache: 'no-store' })
-        ]);
-
-        let fetchedContracts: Contract[] = [];
-        if (contractsRes.ok) {
-            fetchedContracts = await contractsRes.json();
-            setContracts(fetchedContracts);
-        }
-
-        if (summaryRes.ok) {
-            setSummary(await summaryRes.json());
-        } else {
-            setSummary(buildSummaryFromContracts(fetchedContracts));
-        }
-
-        setIsLoading(false);
-    }, [search, statusFilter, typeFilter]);
-
-
-    useEffect(() => {
-        fetchContracts();
-    }, [fetchContracts]);
+    }, [contracts, exchangeRate]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        fetchContracts();
     };
 
     const typeOptions = [
@@ -238,24 +96,49 @@ export default function ContractsPage() {
         { value: 'terminated', label: '해지 완료' },
     ];
 
+    if (isContractsLoading || isOrgLoading) {
+        return (
+            <div className="space-y-4 animate-pulse w-full">
+                <div className="flex justify-between items-center mb-8">
+                    <div className="h-8 w-32 bg-zinc-900/50 rounded-lg"></div>
+                    <div className="h-10 w-24 bg-zinc-900/50 rounded-lg"></div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[...Array(4)].map((_, i) => (
+                        <div key={i} className="h-24 bg-zinc-900/30 rounded-xl border border-zinc-800" />
+                    ))}
+                </div>
+                {[...Array(3)].map((_, i) => (
+                    <div key={i} className="h-24 bg-zinc-900/30 rounded-xl border border-zinc-800" />
+                ))}
+            </div>
+        );
+    }
+
+    if (!organization) {
+        return <div className="p-8 text-center text-muted-foreground">로그인이 필요하거나 소속된 조직이 없습니다.</div>;
+    }
+
     return (
-        <div className="space-y-8 animate-fade-in">
+        <div className="space-y-8 animate-fade-in pb-20">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-foreground">계약 관리</h1>
                     <p className="text-sm text-muted-foreground mt-1">
-                        등록된 계약 {contracts.length}개
+                        {organization.name} 팀의 등록된 계약 {contracts.length}개
                     </p>
                 </div>
-                <Link href="/contracts/new">
-                    <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 w-full sm:w-auto">
-                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        새 계약 등록
-                    </Button>
-                </Link>
+                {isAdmin && (
+                    <Link href="/contracts/new">
+                        <Button className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 w-full sm:w-auto">
+                            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            새 계약 등록
+                        </Button>
+                    </Link>
+                )}
             </div>
 
             {/* Summary Cards */}
@@ -267,7 +150,7 @@ export default function ContractsPage() {
                             <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px] shadow-red-500/50"></span>
                         </div>
                         <div className="flex items-baseline gap-1">
-                            <p className="text-3xl font-bold text-foreground">{summary?.urgent || 0}</p>
+                            <p className="text-3xl font-bold text-foreground">{summary.urgent}</p>
                             <span className="text-sm text-muted-foreground">건</span>
                         </div>
                     </CardContent>
@@ -280,7 +163,7 @@ export default function ContractsPage() {
                             <span className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px] shadow-orange-500/50"></span>
                         </div>
                         <div className="flex items-baseline gap-1">
-                            <p className="text-3xl font-bold text-foreground">{summary?.warning || 0}</p>
+                            <p className="text-3xl font-bold text-foreground">{summary.warning}</p>
                             <span className="text-sm text-muted-foreground">건</span>
                         </div>
                     </CardContent>
@@ -293,7 +176,7 @@ export default function ContractsPage() {
                             <span className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px] shadow-green-500/50"></span>
                         </div>
                         <div className="flex items-baseline gap-1">
-                            <p className="text-3xl font-bold text-foreground">{summary?.normal || 0}</p>
+                            <p className="text-3xl font-bold text-foreground">{summary.normal}</p>
                             <span className="text-sm text-muted-foreground">건</span>
                         </div>
                     </CardContent>
@@ -305,16 +188,16 @@ export default function ContractsPage() {
                             <span className="text-sm font-medium text-blue-400">월 예상 반복 지출</span>
                         </div>
                         <p className="text-2xl font-bold text-foreground font-mono tracking-tight">
-                            {formatCurrency(summary?.totalMonthly || 0)}
+                            {formatCurrency(summary.totalMonthly)}
                         </p>
                         <div className="mt-3 space-y-1">
                             <div className="flex justify-between text-[10px]">
                                 <span className="text-muted-foreground">KRW</span>
-                                <span className="font-medium text-foreground">{formatCurrency(summary?.totalMonthlyKRW || 0, 'KRW')}</span>
+                                <span className="font-medium text-foreground">{formatCurrency(summary.totalMonthlyKRW, 'KRW')}</span>
                             </div>
                             <div className="flex justify-between text-[10px]">
                                 <span className="text-muted-foreground">USD</span>
-                                <span className="font-medium text-foreground">{formatCurrency(summary?.totalMonthlyUSD || 0, 'USD')}</span>
+                                <span className="font-medium text-foreground">{formatCurrency(summary.totalMonthlyUSD, 'USD')}</span>
                             </div>
                         </div>
                         <div className="mt-4 pt-4 border-t border-zinc-800/50">
@@ -322,12 +205,13 @@ export default function ContractsPage() {
                                 환율은 하나은행 매매기준율 기준으로 매일 자동 업데이트됩니다.
                             </p>
                             <p className="text-[10px] text-blue-500/80 mt-1 font-medium text-right">
-                                적용 환율: 1 USD = {formatCurrency(summary?.exchangeRate || 1400, 'KRW')}
+                                적용 환율: 1 USD = {formatCurrency(exchangeRate, 'KRW')}
                             </p>
                         </div>
                     </CardContent>
                 </Card>
             </div>
+
             <div className="p-4 bg-muted/30 border border-border rounded-xl backdrop-blur-sm">
                 <div className="flex flex-col sm:flex-row gap-4">
                     <form onSubmit={handleSearch} className="flex-1 relative">
@@ -364,34 +248,36 @@ export default function ContractsPage() {
             </div>
 
             {/* Contract List */}
-            {isLoading ? (
-                <div className="space-y-4 animate-pulse">
-                    {[...Array(3)].map((_, i) => (
-                        <div key={i} className="h-24 bg-muted/50 border border-border rounded-xl" />
-                    ))}
-                </div>
-            ) : contracts.length === 0 ? (
+            {contracts.length === 0 ? (
                 <div className="text-center py-20 bg-muted/20 border border-dashed border-border rounded-xl">
                     <div className="w-16 h-16 rounded-full bg-secondary border border-border flex items-center justify-center mx-auto mb-6 shadow-inner">
                         <span className="text-3xl">📭</span>
                     </div>
                     <h3 className="text-lg font-medium text-foreground mb-2">등록된 계약이 없습니다</h3>
                     <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
-                        매월 나가는 구독료, 갱신이 필요한 계약들을<br />지금 바로 등록하고 관리해보세요.
+                        {isAdmin
+                            ? "매월 나가는 구독료, 갱신이 필요한 계약들을<br />지금 바로 등록하고 관리해보세요."
+                            : "관리자에게 계약 등록을 요청하세요."}
                     </p>
-                    <Link href="/contracts/new">
-                        <Button variant="outline" className="border-border hover:bg-accent hover:text-accent-foreground">
-                            첫 계약 등록하기
-                        </Button>
-                    </Link>
+                    {isAdmin && (
+                        <Link href="/contracts/new">
+                            <Button variant="outline" className="border-border hover:bg-accent hover:text-accent-foreground">
+                                첫 계약 등록하기
+                            </Button>
+                        </Link>
+                    )}
+                </div>
+            ) : filteredContracts.length === 0 ? (
+                <div className="text-center py-20">
+                    <p className="text-muted-foreground">검색 결과가 없습니다.</p>
                 </div>
             ) : (
                 <div className="space-y-3">
-                    {contracts.map((contract) => (
+                    {filteredContracts.map((contract) => (
                         <ContractCard
                             key={contract.id}
-                            contract={contract}
-                            exchangeRate={summary?.exchangeRate}
+                            contract={contract as any} // contract type mismatch possible, casting
+                            exchangeRate={exchangeRate}
                         />
                     ))}
                 </div>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Input, Select, Textarea } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useOrganization } from '@/contexts/OrganizationContext';
 import { useToast } from '@/components/ui/toast';
 import type { Contract, ContractFormData } from '@/types';
 
@@ -16,6 +17,7 @@ interface ContractFormProps {
 export function ContractForm({ contract, mode }: ContractFormProps) {
     const router = useRouter();
     const { addToast } = useToast();
+    const { organization } = useOrganization();
     const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState<ContractFormData>({
         name: contract?.name || '',
@@ -44,7 +46,10 @@ export function ContractForm({ contract, mode }: ContractFormProps) {
             const res = await fetch(url, {
                 method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    ...formData,
+                    organization_id: organization?.id,
+                }),
             });
 
             if (!res.ok) {

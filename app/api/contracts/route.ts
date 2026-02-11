@@ -11,6 +11,7 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
+    const organizationId = searchParams.get('organization_id');
     const type = searchParams.get('type');
     const status = searchParams.get('status');
     const search = searchParams.get('search');
@@ -19,8 +20,13 @@ export async function GET(request: Request) {
 
     let query = supabase
         .from('contracts')
-        .select('*')
-        .eq('user_id', user.id);
+        .select('*');
+
+    if (organizationId) {
+        query = query.eq('organization_id', organizationId);
+    } else {
+        query = query.eq('user_id', user.id);
+    }
 
     if (type && type !== 'all') {
         query = query.eq('type', type);
@@ -93,6 +99,7 @@ export async function POST(request: Request) {
             memo: body.memo || null,
             tier: body.tier || '',
             owner_name: body.owner_name || '',
+            organization_id: body.organization_id || null,
             status: 'active', // Default status
         })
         .select()

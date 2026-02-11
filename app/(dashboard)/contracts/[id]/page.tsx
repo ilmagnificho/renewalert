@@ -13,6 +13,7 @@ import { formatCurrency, getDaysUntil, getUrgencyLevel, formatDDay, formatDate, 
 import { Input } from '@/components/ui/input';
 import { Modal } from '@/components/ui/modal';
 import { CancellationExecutionCard } from '@/components/contracts/execution-card';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +21,7 @@ export default function ContractDetailPage() {
     const params = useParams();
     const router = useRouter();
     const { addToast } = useToast();
+    const { isAdmin } = useOrganization();
     const [contract, setContract] = useState<Contract | null>(null);
     const [guide, setGuide] = useState<CancellationGuide | null>(null);
     const [exchangeRate, setExchangeRate] = useState<number>(1400);
@@ -168,17 +170,21 @@ export default function ContractDetailPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="border-slate-700 hover:bg-slate-800 text-slate-300">
-                        수정
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setShowDeleteModal(true)} className="text-red-400 hover:bg-red-500/10 hover:text-red-300">
-                        삭제
-                    </Button>
+                    {isAdmin && (
+                        <>
+                            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="border-slate-700 hover:bg-slate-800 text-slate-300">
+                                수정
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setShowDeleteModal(true)} className="text-red-400 hover:bg-red-500/10 hover:text-red-300">
+                                삭제
+                            </Button>
+                        </>
+                    )}
                 </div>
             </div>
 
             {/* Decision Execution Card */}
-            {contract.status === 'active' && (daysUntil <= 30 || guide) && (
+            {contract.status === 'active' && (daysUntil <= 30 || guide) && isAdmin && (
                 <CancellationExecutionCard
                     contract={contract}
                     guide={guide}
@@ -230,7 +236,7 @@ export default function ContractDetailPage() {
             </Card>
 
             {/* Actions */}
-            {contract.status === 'active' && (
+            {contract.status === 'active' && isAdmin && (
                 <div className="flex flex-col sm:flex-row gap-4 p-6 bg-slate-900/30 border border-slate-800/50 rounded-xl">
                     <div className="flex-1">
                         <h3 className="text-base font-semibold text-white mb-1">계약 상태 변경</h3>

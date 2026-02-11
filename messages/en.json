@@ -1,0 +1,40 @@
+{
+    "Common": {
+        "save": "Save",
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "delete": "Delete",
+        "edit": "Edit",
+        "loading": "Loading..."
+    },
+    "Sidebar": {
+        "home": "Home",
+        "contracts": "Contracts",
+        "pricing": "Pricing",
+        "settings": "Settings",
+        "admin": "Admin Dashboard",
+        "addContract": "Add Contract",
+        "signOut": "Sign Out"
+    },
+    "Dashboard": {
+        "welcome": "Welcome back",
+        "totalSpent": "Total Monthly Spend",
+        "activeContracts": "Active Contracts",
+        "upcomingRenewals": "Upcoming Renewals",
+        "days": "days"
+    },
+    "Settings": {
+        "title": "Settings",
+        "profile": "Profile",
+        "team": "Team Management",
+        "teamDescription": "Manage your team, invite members, and set roles."
+    },
+    "Auth": {
+        "login": "Log In",
+        "signup": "Sign Up",
+        "companyName": "Company Name",
+        "email": "Email",
+        "password": "Password",
+        "continue": "Continue"
+    }
+}
