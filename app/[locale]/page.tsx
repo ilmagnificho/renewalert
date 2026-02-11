@@ -49,6 +49,7 @@ const INDUSTRY_PROFILES: Record<string, { label: string; split: Array<{ name: st
 export default function LandingPage() {
   const locale = useLocale();
   const isEnglish = locale === 'en';
+  const localeDateFormat = isEnglish ? 'en-US' : 'ko-KR';
 
   const [industry, setIndustry] = useState<'saas' | 'commerce' | 'agency'>('saas');
   const [employees, setEmployees] = useState(12);
@@ -99,7 +100,7 @@ export default function LandingPage() {
 
         if (!contracts || contracts.length === 0) {
           setAccountContracts([]);
-          setLastSyncedAt(new Date().toLocaleString(isEnglish ? 'en-US' : 'ko-KR'));
+          setLastSyncedAt(new Date().toLocaleString(localeDateFormat));
           return;
         }
 
@@ -121,7 +122,7 @@ export default function LandingPage() {
         setAccountContracts(normalized);
         const mostRecent = contracts[0]?.updated_at;
         setLastSyncedAt(
-          mostRecent ? new Date(mostRecent).toLocaleString(isEnglish ? 'en-US' : 'ko-KR') : new Date().toLocaleString(isEnglish ? 'en-US' : 'ko-KR'),
+          mostRecent ? new Date(mostRecent).toLocaleString(localeDateFormat) : new Date().toLocaleString(localeDateFormat),
         );
       } catch {
         setIsAccountSession(false);
@@ -131,7 +132,7 @@ export default function LandingPage() {
     }
 
     void loadContractsForSession();
-  }, []);
+  }, [localeDateFormat]);
 
   const simulatedContracts = useMemo<DisplayContract[]>(() => {
     const profile = INDUSTRY_PROFILES[industry];
